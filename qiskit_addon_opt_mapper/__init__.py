@@ -1,0 +1,28 @@
+# This code is part of a Qiskit project.
+#
+# (C) Copyright IBM 2025.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
+"""
+===========================================================
+Optimization Add-on module (:mod:`qiskit_addon_opt_mapper`)
+===========================================================
+"""
+
+
+from .exceptions import AlgorithmError, OptimizationError
+from .infinity import INFINITY
+from .problems.optimization_problem import OptimizationProblem
+
+__all__ = [
+    "OptimizationProblem",
+    "INFINITY",
+    "OptimizationError",
+    "AlgorithmError",
+]

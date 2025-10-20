@@ -1,0 +1,48 @@
+[project]
+name = "qiskit-addon-opt-mapper"
+version = "0.1.0"
+description = "An addon for optimization problems, providing various utilities and enhancements."
+authors = [{ name="Atsushi Matsuo", email="matsuoa@jp.ibm.com" },
+           { name="Daniel J. Egger", email="deg@zurich.ibm.com"},
+           { name="Elena Peña Tapia", email="ept@zurich.ibm.com"},
+           { name="Stefan Wörner", email="wor@zurich.ibm.com"}]
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE.txt"]
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+cplex = ["cplex; (python_version < '3.13' and platform_system != 'Darwin') or (python_version < '3.12' and platform_system == 'Darwin')"]
+cvx = ["cvxpy"]
+matplotlib = ["matplotlib"]
+gurobi = ["gurobipy"]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.setuptools]
+packages = ["qiskit_addon_opt_mapper"]
+py-modules = ["__init__"] # dash, not underscore
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+  "E",   # pycodestyle
+  "F",   # pyflakes
+  "I",   # isort-equivalent
+  "B",   # flake8-bugbear
+  "C4",  # flake8-comprehensions
+]
+ignore = ["B905"]  # zip() without an explicit strict= parameter
+
+[tool.ruff.lint.isort]
+known-first-party = ["qiskit_addon_opt_mapper"]
