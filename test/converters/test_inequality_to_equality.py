@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -15,7 +15,6 @@
 import unittest
 
 import numpy as np
-
 from qiskit_addon_opt_mapper import OptimizationProblem
 from qiskit_addon_opt_mapper.converters import (
     InequalityToEquality,

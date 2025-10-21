@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -11,7 +11,6 @@
 # that they have been altered from the originals.
 
 """Test SpinToBinary Converters"""
-
 
 from qiskit_addon_opt_mapper import OptimizationProblem
 from qiskit_addon_opt_mapper.converters import (
@@ -93,5 +92,6 @@ class TestSpinToBinaryConverter(OptimizationTestCase):
         self.assertDictEqual(c2.linear.to_dict(use_name=True), {"x0@bin": 1, "x1@bin": 1})
         self.assertDictEqual(c2.quadratic.to_dict(use_name=True), {("x0@bin", "x1@bin"): 1})
         self.assertDictEqual(
-            c2.higher_order[3].to_dict(use_name=True), {("x0@bin", "x1@bin", "x2@bin"): 1}
+            c2.higher_order[3].to_dict(use_name=True),
+            {("x0@bin", "x1@bin", "x2@bin"): 1},
         )

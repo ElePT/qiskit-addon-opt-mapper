@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -11,9 +11,9 @@
 # that they have been altered from the originals.
 
 """Test GraphPartinioning class"""
+
 import networkx as nx
 import numpy as np
-
 from qiskit_addon_opt_mapper import OptimizationProblem
 from qiskit_addon_opt_mapper.applications.graph_partition import GraphPartition
 from qiskit_addon_opt_mapper.problems import Constraint, OptimizationObjective, VarType

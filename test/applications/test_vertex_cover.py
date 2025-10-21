@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -11,11 +11,11 @@
 # that they have been altered from the originals.
 
 """Test VertexCover class"""
+
 import unittest
 
 import networkx as nx
 import numpy as np
-
 from qiskit_addon_opt_mapper import OptimizationProblem
 from qiskit_addon_opt_mapper.applications.vertex_cover import VertexCover
 from qiskit_addon_opt_mapper.problems import Constraint, OptimizationObjective, VarType

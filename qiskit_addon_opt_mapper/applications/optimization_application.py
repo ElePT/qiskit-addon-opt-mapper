@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -11,9 +11,9 @@
 # that they have been altered from the originals.
 
 """An abstract class for optimization application classes."""
+
 from abc import ABC, abstractmethod
 from collections import OrderedDict
-from typing import Dict, Union
 
 import numpy as np
 from qiskit.quantum_info import Statevector
@@ -23,21 +23,23 @@ from qiskit_addon_opt_mapper.problems.optimization_problem import OptimizationPr
 
 
 class OptimizationApplication(ABC):
-    """
-    An abstract class for optimization applications.
-    """
+    """An abstract class for optimization applications."""
 
     @abstractmethod
     def to_optimization_problem(self) -> OptimizationProblem:
-        """Convert a problem instance into a
+        """Represent as an optimization problem.
+
+        Convert a problem instance into a
         :class:`~qiskit_addon_opt_mapper.problems.OptimizationProblem`
         """
         pass
 
     @abstractmethod
     def interpret(self, result: np.ndarray):
-        """Convert the calculation result of the problem
-        (:class:`~qiskit_addon_opt_mapper.algorithms.SolverResult` or a binary array using
+        """Interpret the problem.
+
+        Convert the calculation result of the problem
+        (:class:`~qiskit_addon_opt_mapper.solvers.SolverResult` or a binary array using
         np.ndarray) to the answer of the problem in an easy-to-understand format.
 
         Args:
@@ -47,24 +49,24 @@ class OptimizationApplication(ABC):
 
     def _result_to_x(self, result: np.ndarray) -> np.ndarray:
         """Hook to support different result formats in the future."""
-
         if isinstance(result, np.ndarray):
             x = result
         else:
             raise TypeError(
-                "Unsupported format of result. Provid a",
+                "Unsupported format of result. Provide a",
                 f" binary array using np.ndarray instead of {type(result)}",
             )
         return x
 
     @staticmethod
     def sample_most_likely(
-        state_vector: Union[QuasiDistribution, Statevector, np.ndarray, Dict],
+        state_vector: QuasiDistribution | Statevector | np.ndarray | dict,
     ) -> np.ndarray:
         """Compute the most likely binary string from state vector.
 
         Args:
             state_vector: state vector or counts or quasi-probabilities.
+
 
         Returns:
             binary string as numpy.ndarray of ints.
@@ -78,7 +80,7 @@ class OptimizationApplication(ABC):
             binary_string = max(probabilities.items(), key=lambda kv: kv[1])[0]
             x = np.asarray([int(y) for y in reversed(list(binary_string))])
             return x
-        elif isinstance(state_vector, Statevector):
+        if isinstance(state_vector, Statevector):
             probabilities = state_vector.probabilities()
             n = state_vector.num_qubits
             k = np.argmax(np.abs(probabilities))
@@ -87,12 +89,12 @@ class OptimizationApplication(ABC):
                 x[i] = k % 2
                 k >>= 1
             return x
-        elif isinstance(state_vector, (OrderedDict, dict)):
+        if isinstance(state_vector, OrderedDict | dict):
             # get the binary string with the largest count
             binary_string = max(state_vector.items(), key=lambda kv: kv[1])[0]
             x = np.asarray([int(y) for y in reversed(list(binary_string))])
             return x
-        elif isinstance(state_vector, np.ndarray):
+        if isinstance(state_vector, np.ndarray):
             n = int(np.log2(state_vector.shape[0]))
             k = np.argmax(np.abs(state_vector))
             x = np.zeros(n)
@@ -100,8 +102,7 @@ class OptimizationApplication(ABC):
                 x[i] = k % 2
                 k >>= 1
             return x
-        else:
-            raise ValueError(
-                "state vector should be QuasiDistribution, Statevector, ndarray, or dict. "
-                f"But it is {type(state_vector)}."
-            )
+        raise ValueError(
+            "state vector should be QuasiDistribution, Statevector, ndarray, or dict. "
+            f"But it is {type(state_vector)}."
+        )

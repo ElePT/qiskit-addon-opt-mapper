@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -53,7 +53,7 @@ class SolutionSample:
 
     x: np.ndarray
     """The values of the variables"""
-    fval: float
+    fval: float | None
     """The objective function value"""
     probability: float
     """The probability of this sample"""
@@ -72,7 +72,7 @@ class SolverResult:
 
     Examples:
         >>> from qiskit_addon_opt_mapper import OptimizationProblem
-        >>> from qiskit_addon_opt_mapper.algorithms import CplexOptimizer
+        >>> from qiskit_addon_opt_mapper.solvers import CplexSolver
         >>> problem = OptimizationProblem()
         >>> _ = problem.binary_var('x1')
         >>> _ = problem.binary_var('x2')
@@ -80,7 +80,7 @@ class SolverResult:
         >>> problem.minimize(linear={'x1': 1, 'x2': -2, 'x3': 3})
         >>> print([var.name for var in problem.variables])
         ['x1', 'x2', 'x3']
-        >>> optimizer = CplexOptimizer()
+        >>> optimizer = CplexSolver()
         >>> result = optimizer.solve(problem)
         >>> print(result.variable_names)
         ['x1', 'x2', 'x3']
@@ -104,13 +104,14 @@ class SolverResult:
     def __init__(  # pylint: disable=too-many-positional-arguments
         self,
         x: list[float] | np.ndarray | None,
-        fval: float | None,
+        fval: float,
         variables: list[Variable],
         status: SolverResultStatus,
         raw_results: Any | None = None,
         samples: list[SolutionSample] | None = None,
     ) -> None:
-        """
+        """Init method.
+
         Args:
             x: the variable values found in the optimization, or possibly None in case of FAILURE.
             fval: the objective function value.
@@ -120,7 +121,8 @@ class SolverResult:
             samples: the solution samples.
 
         Raises:
-            OptimizationError: if sizes of ``x`` and ``variables`` do not match.
+            OptimizationError: if sizes of ``x`` and ``variables`` do not match or one of (fval, samples)
+                is not provided.
         """
         self._variables = variables
         self._variable_names = [var.name for var in self._variables]
@@ -131,12 +133,13 @@ class SolverResult:
         else:
             if len(x) != len(variables):
                 raise OptimizationError(
-                    f"Inconsistent size of variable values (x) and variables. x: size {len(x)} {x}, "
+                    f"Inconsistent size of variable values (x) and variables. "
+                    f"x: size {len(x)} {x}, "
                     f"variables: size {len(variables)} {[v.name for v in variables]}"
                 )
             self._x = np.asarray(x)
             self._variables_dict = {
-                name: val.item() for name, val in zip(self._variable_names, self._x)
+                name: val.item() for name, val in zip(self._variable_names, self._x, strict=False)
             }
 
         self._fval = fval
@@ -153,10 +156,15 @@ class SolverResult:
             ]
 
     def __repr__(self) -> str:
-        return f"<{self.__class__.__name__}: {str(self)}>"
+        """Repr. method."""
+        return f"<{self.__class__.__name__}: {self!s}>"
 
     def __str__(self) -> str:
-        variables = ", ".join([f"{var}={x}" for var, x in self._variables_dict.items()])
+        """Str. method."""
+        if self._variables_dict:
+            variables = ", ".join([f"{var}={x}" for var, x in self._variables_dict.items()])
+        else:
+            variables = ""
         return f"fval={self._fval}, {variables}, status={self._status.name}"
 
     def prettyprint(self) -> str:
@@ -165,7 +173,10 @@ class SolverResult:
         Returns:
             A pretty printed string representing the result.
         """
-        variables = ", ".join([f"{var}={x}" for var, x in self._variables_dict.items()])
+        if self._variables_dict:
+            variables = ", ".join([f"{var}={x}" for var, x in self._variables_dict.items()])
+        else:
+            variables = ""
         return (
             f"objective function value: {self._fval}\n"
             f"variable values: {variables}\n"
@@ -184,6 +195,7 @@ class SolverResult:
         Args:
             key: an integer or a string.
 
+
         Returns:
             The value of a variable whose index or name is equal to ``key``.
 
@@ -193,19 +205,21 @@ class SolverResult:
             TypeError: if ``key`` is neither an integer nor a string.
         """
         if isinstance(key, int):
-            return self._x[key]
+            if self._x is not None:
+                return float(self._x[key])
+            raise ValueError("Variable is empty")
         if isinstance(key, str):
-            return self._variables_dict[key]
+            if self._variables_dict is not None:
+                return float(self._variables_dict[key])
+            raise ValueError("Variable dict. is empty")
         raise TypeError(f"Integer or string key required, instead {type(key)}({key}) provided.")
 
     def get_correlations(self) -> np.ndarray:
-        """
-        Get <Zi x Zj> correlation matrix from the samples.
+        """Get <Zi x Zj> correlation matrix from the samples.
 
         Returns:
             A correlation matrix.
         """
-
         states = [v.x for v in self.samples]
         probs = [v.probability for v in self.samples]
 
@@ -235,7 +249,8 @@ class SolverResult:
         """Returns the objective function value.
 
         Returns:
-            The function value corresponding to the objective function value found in the optimization.
+            The function value corresponding to the objective function value
+            found in the optimization.
         """
         return self._fval
 
@@ -244,6 +259,7 @@ class SolverResult:
         """Return the original results object from the optimization algorithm.
 
         Currently a dump for any leftovers.
+
 
         Returns:
             Additional result information of the optimization algorithm.
@@ -275,7 +291,7 @@ class SolverResult:
         Returns:
             The variable values as a dictionary of the variable name and corresponding value.
         """
-        return self._variables_dict
+        return cast(dict[str, float], self._variables_dict)
 
     @property
     def variable_names(self) -> list[str]:
@@ -288,7 +304,7 @@ class SolverResult:
 
     @property
     def samples(self) -> list[SolutionSample]:
-        """Returns the list of solution samples
+        """Returns the list of solution samples.
 
         Returns:
             The list of solution samples.
@@ -308,6 +324,7 @@ class OptimizationSolver(ABC):
         Args:
             problem: The optimization problem to check compatibility.
 
+
         Returns:
             Returns the incompatibility message. If the message is empty no issues were found.
         """
@@ -317,6 +334,7 @@ class OptimizationSolver(ABC):
 
         Args:
             problem: The optimization problem to check compatibility.
+
 
         Returns:
             Returns True if the problem is compatible, False otherwise.
@@ -332,6 +350,7 @@ class OptimizationSolver(ABC):
         Args:
             problem: The problem to be solved.
 
+
         Returns:
             The result of the optimizer applied to the problem.
 
@@ -341,12 +360,14 @@ class OptimizationSolver(ABC):
         raise NotImplementedError
 
     def _verify_compatibility(self, problem: OptimizationProblem) -> None:
-        """Verifies that the problem is suitable for this optimizer. If the problem is not
-        compatible then an exception is raised. This method is for convenience for concrete
-        optimizers and is not intended to be used by end user.
+        """Verifies that the problem is suitable for this optimizer.
+
+        If the problem is not compatible then an exception is raised. This method is for
+        convenience for concrete optimizers and is not intended to be used by end users.
 
         Args:
             problem: Problem to verify.
+
 
         Returns:
             None
@@ -370,6 +391,7 @@ class OptimizationSolver(ABC):
             problem: Problem to verify.
             x: the input result list.
 
+
         Returns:
             The status of the result.
         """
@@ -379,7 +401,7 @@ class OptimizationSolver(ABC):
 
     @staticmethod
     def _prepare_converters(
-        converters: OptimizationProblemConverter | list[OptimizationProblemConverter] | None,
+        converters: (OptimizationProblemConverter | list[OptimizationProblemConverter] | None),
         penalty: float | None = None,
     ) -> list[OptimizationProblemConverter]:
         """Prepare a list of converters from the input.
@@ -391,6 +413,7 @@ class OptimizationSolver(ABC):
             penalty: The penalty factor used in the default
                 :class:`~qiskit_addon_opt_mapper.converters.OptimizationProblemToQubo` converter
 
+
         Returns:
             The list of converters.
 
@@ -400,25 +423,25 @@ class OptimizationSolver(ABC):
         """
         if converters is None:
             return [OptimizationProblemToQubo(penalty=penalty)]
-        elif isinstance(converters, OptimizationProblemConverter):
+        if isinstance(converters, OptimizationProblemConverter):
             return [converters]
-        elif isinstance(converters, list) and all(
+        if isinstance(converters, list) and all(
             isinstance(converter, OptimizationProblemConverter) for converter in converters
         ):
             return converters
-        else:
-            raise TypeError("`converters` must all be of the OptimizationProblemConverter type")
+        raise TypeError("`converters` must all be of the OptimizationProblemConverter type")
 
     @staticmethod
     def _convert(
         problem: OptimizationProblem,
         converters: OptimizationProblemConverter | list[OptimizationProblemConverter],
     ) -> OptimizationProblem:
-        """Convert the problem with the converters
+        """Convert the problem with the converters.
 
         Args:
             problem: The problem to be solved
             converters: The converters to use for converting a problem into a different form.
+
 
         Returns:
             The problem converted by the converters.
@@ -435,7 +458,7 @@ class OptimizationSolver(ABC):
 
     @staticmethod
     def _check_converters(
-        converters: OptimizationProblemConverter | list[OptimizationProblemConverter] | None,
+        converters: (OptimizationProblemConverter | list[OptimizationProblemConverter] | None),
     ) -> list[OptimizationProblemConverter]:
         if converters is None:
             converters = []
@@ -450,7 +473,9 @@ class OptimizationSolver(ABC):
         cls,
         x: np.ndarray,
         problem: OptimizationProblem,
-        converters: OptimizationProblemConverter | list[OptimizationProblemConverter] | None = None,
+        converters: (
+            OptimizationProblemConverter | list[OptimizationProblemConverter] | None
+        ) = None,
         result_class: type[SolverResult] = SolverResult,
         **kwargs,
     ) -> SolverResult:
@@ -463,6 +488,7 @@ class OptimizationSolver(ABC):
             problem: The original problem for which `x` is interpreted.
             result_class: The class of the result object.
             kwargs: parameters of the constructor of result_class
+
 
         Returns:
             The result of the original problem.
@@ -493,9 +519,11 @@ class OptimizationSolver(ABC):
         cls,
         problem: OptimizationProblem,
         raw_samples: list[SolutionSample],
-        converters: OptimizationProblemConverter | list[OptimizationProblemConverter] | None = None,
+        converters: (
+            OptimizationProblemConverter | list[OptimizationProblemConverter] | None
+        ) = None,
     ) -> tuple[list[SolutionSample], SolutionSample]:
-        """Interpret and sort all samples and return the raw sample corresponding to the best one"""
+        """Interpret and sort all samples and return the raw sample corresponding to the best one."""
         converters = cls._check_converters(converters)
 
         prob: dict[tuple, float] = {}
@@ -519,7 +547,7 @@ class OptimizationSolver(ABC):
 
         sorted_samples = sorted(
             samples,
-            key=lambda v: (v.status.value, problem.objective.sense.value * v.fval),
+            key=lambda v: (v.status.value, problem.objective.sense.value * v.fval),  # type: ignore
         )
         best_raw = raw_samples[index[tuple(sorted_samples[0].x)]]
         return sorted_samples, best_raw
@@ -536,6 +564,7 @@ class OptimizationSolver(ABC):
             eigenvector: The eigenvector from which the solution states are extracted.
             qubo: The QUBO to evaluate at the bitstring.
             min_probability: Only consider states where the amplitude exceeds this threshold.
+
 
         Returns:
             For each computational basis state contained in the eigenvector, return the basis

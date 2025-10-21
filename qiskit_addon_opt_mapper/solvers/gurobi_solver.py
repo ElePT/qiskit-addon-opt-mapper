@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -13,6 +13,7 @@
 """The Gurobi solver wrapped to be used within the addon."""
 
 import qiskit_addon_opt_mapper.optionals as _optionals
+
 from ..exceptions import OptimizationError
 from ..problems import OptimizationProblem
 from ..translators.gurobipy import to_gurobipy
@@ -51,7 +52,7 @@ class GurobiSolver(OptimizationSolver):
 
     @staticmethod
     def is_gurobi_installed():
-        """Returns True if gurobi is installed"""
+        """Returns True if gurobi is installed."""
         return _optionals.HAS_GUROBIPY
 
     @property
@@ -66,6 +67,7 @@ class GurobiSolver(OptimizationSolver):
     @disp.setter
     def disp(self, disp: bool):
         """Set the display setting.
+
         Args:
             disp: The display setting.
         """
@@ -81,6 +83,7 @@ class GurobiSolver(OptimizationSolver):
         Args:
             problem: The optimization problem to check compatibility.
 
+
         Returns:
             An empty string.
         """
@@ -94,6 +97,7 @@ class GurobiSolver(OptimizationSolver):
 
         Args:
             problem: The problem to be solved.
+
 
         Returns:
             The result of the optimizer applied to the problem.

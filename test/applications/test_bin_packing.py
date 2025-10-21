@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -14,7 +14,6 @@
 import unittest
 
 import numpy as np
-
 import qiskit_addon_opt_mapper.optionals as _optionals
 from qiskit_addon_opt_mapper import OptimizationProblem
 from qiskit_addon_opt_mapper.applications.bin_packing import BinPacking

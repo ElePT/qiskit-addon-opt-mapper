@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -15,7 +15,10 @@
 import unittest
 
 from qiskit_addon_opt_mapper import OptimizationProblem
-from qiskit_addon_opt_mapper.converters import LinearInequalityToPenalty, OptimizationProblemToQubo
+from qiskit_addon_opt_mapper.converters import (
+    LinearInequalityToPenalty,
+    OptimizationProblemToQubo,
+)
 from qiskit_addon_opt_mapper.problems import Constraint
 
 from ..optimization_test_case import OptimizationTestCase
@@ -93,7 +96,11 @@ class TestLinearInequalityToPenalty(OptimizationTestCase):
             op.linear_constraint(linear_constraint, Constraint.Sense.EQ, 1, "None 1")
             quadratic_constraint = {("x", "x"): -2, ("y", "w"): 1}
             op.quadratic_constraint(
-                linear_constraint, quadratic_constraint, Constraint.Sense.LE, 1, "None 2"
+                linear_constraint,
+                quadratic_constraint,
+                Constraint.Sense.LE,
+                1,
+                "None 2",
             )
 
             lip.penalty = 5
@@ -192,7 +199,11 @@ class TestLinearInequalityToPenalty(OptimizationTestCase):
             op.linear_constraint(linear_constraint, Constraint.Sense.EQ, 1, "None 1")
             quadratic_constraint = {("x", "x"): -2, ("y", "w"): 1}
             op.quadratic_constraint(
-                linear_constraint, quadratic_constraint, Constraint.Sense.LE, 1, "None 2"
+                linear_constraint,
+                quadratic_constraint,
+                Constraint.Sense.LE,
+                1,
+                "None 2",
             )
 
             lip.penalty = 5
@@ -453,7 +464,14 @@ class TestLinearInequalityToPenalty(OptimizationTestCase):
         op.integer_var(name="y", lowerbound=-1, upperbound=4)
         op.integer_var(name="z", lowerbound=-5, upperbound=-1)
         op.maximize(
-            quadratic={(0, 0): -1, (0, 1): -1, (0, 2): -1, (1, 1): -1, (1, 2): -1, (2, 2): -1}
+            quadratic={
+                (0, 0): -1,
+                (0, 1): -1,
+                (0, 2): -1,
+                (1, 1): -1,
+                (1, 2): -1,
+                (2, 2): -1,
+            }
         )
         lip = LinearInequalityToPenalty()
         self.assertEqual(lip._auto_define_penalty(op), 103)

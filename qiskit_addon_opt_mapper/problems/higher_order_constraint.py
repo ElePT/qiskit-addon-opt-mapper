@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -11,7 +11,7 @@
 # that they have been altered from the originals.
 """Higher-order Constraint with linear, quadratic, and higher-order terms."""
 
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 from numpy import ndarray
 from scipy.sparse import spmatrix
@@ -21,14 +21,14 @@ from .higher_order_expression import HigherOrderExpression
 from .linear_expression import LinearExpression
 from .quadratic_expression import QuadraticExpression
 
-CoeffLike = Union[ndarray, Dict[Tuple[Union[int, str]], float], List]
+CoeffLike = ndarray | dict[tuple[str | int, ...], float] | list
 
 
 class HigherOrderConstraint(Constraint):
-    """Constraint of the form:
-    e.g. linear(x) + x^T Q x + sum_{k>=3}  sum_{|t|=k} C_k[t] * prod_{i in t} x[i]  `sense` `rhs`
-    where `sense` is one of the ConstraintSense values (e.g., LE, <=) and `rhs` is a float.
+    """Constraint in higher order form.
 
+    e.g. ``linear(x) + x^T Q x + sum_{k>=3}  sum_{|t|=k} C_k[t] * prod_{i in t} x[i]`` ``sense`` ``rhs``
+    where ``sense`` is one of the ConstraintSense values (e.g., LE, <=) and ``rhs`` is a float.
 
     Supports both a single higher-order term (order+coeffs) and multiple via
     higher_orders={k: coeffs}.
@@ -41,32 +41,23 @@ class HigherOrderConstraint(Constraint):
         optimization_problem: Any,
         name: str,
         # linear/quadratic
-        linear: Optional[
-            Union[ndarray, spmatrix, List[float], Dict[Union[str, int], float]]
-        ] = None,
-        quadratic: Optional[
-            Union[
-                ndarray,
-                spmatrix,
-                List[List[float]],
-                Dict[Tuple[Union[int, str], Union[int, str]], float],
-            ]
-        ] = None,
+        linear: ndarray | spmatrix | list[float] | dict[str | int, float] | None = None,
+        quadratic: (
+            ndarray | spmatrix | list[list[float]] | dict[tuple[int | str, int | str], float] | None
+        ) = None,
         # higher-order
-        higher_order: Optional[Dict[int, CoeffLike]] = None,
+        higher_order: dict[int, CoeffLike] | None = None,
         sense: ConstraintSense = ConstraintSense.LE,
         rhs: float = 0.0,
     ) -> None:
-        """Construct a higher-order constraint with linear, quadratic, and optional higher-order
-        parts.
+        """Construct a higher-order constraint with linear, quadratic, and optional higher-order parts.
 
         Args:
             optimization_problem: The optimization problem this constraint belongs to.
             name: The name of the constraint.
-            linear: The coefficients for the linear part of the constraint.
-            quadratic: The coefficients for the quadratic part of the constraint.
-            higher_order: A single higher-order expression or a dictionary of {order: coeffs}
-                for multiple orders (k>=3).
+            linear: Coefficients for the linear part.
+            quadratic: Coefficients for the quadratic part.
+            higher_order: A single higher-order expression or a dictionary of {order: coeffs} for multiple orders (k≥3).
             sense: The sense of the constraint (e.g., LE, <=).
             rhs: The right-hand-side value of the constraint.
         """
@@ -79,7 +70,7 @@ class HigherOrderConstraint(Constraint):
 
         # Store multiple higher-order expressions keyed by order (k>=3)
         if higher_order is None:
-            self._higher_order: Dict[int, HigherOrderExpression] = {}
+            self._higher_order: dict[int, HigherOrderExpression] = {}
         else:
             self.higher_order = higher_order
 
@@ -121,7 +112,7 @@ class HigherOrderConstraint(Constraint):
         self._quadratic = QuadraticExpression(self.optimization_problem, quadratic)
 
     @property
-    def higher_order(self) -> Dict[int, HigherOrderExpression]:
+    def higher_order(self) -> dict[int, HigherOrderExpression]:
         """Return a shallow copy of {order: HigherOrderExpression}.
 
         Returns:
@@ -132,7 +123,7 @@ class HigherOrderConstraint(Constraint):
     @higher_order.setter
     def higher_order(
         self,
-        higher_order: Union[Dict[int, CoeffLike]],
+        higher_order: dict[int, CoeffLike],
     ) -> None:
         """Sets the higher-order expressions.
 
@@ -144,20 +135,22 @@ class HigherOrderConstraint(Constraint):
         for k, coeffs in higher_order.items():
             self._higher_order[k] = HigherOrderExpression(self.optimization_problem, coeffs)
 
-    def evaluate(self, x: Union[ndarray, List, Dict[Union[int, str], float]]) -> float:
+    def evaluate(self, x: ndarray | list | dict[str | int, float]) -> float:
         """Evaluate the left-hand-side of the constraint.
 
         Args:
             x: The values of the variables to be evaluated.
+
         Returns:
             The left-hand-side of the constraint given the variable values.
         """
         val = self.linear.evaluate(x) + self.quadratic.evaluate(x)
         for expr in self._higher_order.values():
             val += expr.evaluate(x)
-        return val
+        return float(val)
 
     def __repr__(self):
+        """Repr for higher order constraint."""
         # pylint: disable=cyclic-import
         from ..translators.prettyprint import DEFAULT_TRUNCATE, expr2str
 
@@ -170,6 +163,7 @@ class HigherOrderConstraint(Constraint):
         return f"<{self.__class__.__name__}: {lhs} {self.sense.label} {self.rhs} '{self.name}'>"
 
     def __str__(self):
+        """Str for higher order constraint."""
         # pylint: disable=cyclic-import
         from ..translators.prettyprint import expr2str
 

@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -12,24 +12,27 @@
 
 """A converter from optimization problem to a QUBO."""
 
-from typing import List, Optional, Union, cast
+from typing import cast
 
 import numpy as np
 
+from ..exceptions import OptimizationError
+from ..problems.optimization_problem import OptimizationProblem
+from .equality_to_penalty import EqualityToPenalty
 from .flip_problem_sense import MaximizeToMinimize
 from .inequality_to_equality import InequalityToEquality
 from .integer_to_binary import IntegerToBinary
 from .linear_inequality_to_penalty import LinearInequalityToPenalty
-from .spin_to_binary import SpinToBinary
-from ..exceptions import OptimizationError
-from ..problems.optimization_problem import OptimizationProblem
-from .equality_to_penalty import EqualityToPenalty
 from .optimization_problem_converter import OptimizationProblemConverter
+from .spin_to_binary import SpinToBinary
 
 
 class OptimizationProblemToQubo(OptimizationProblemConverter):
-    """Convert a given optimization problem in quadratic form into a QUBO problem by converting variables to binary
-    and eliminating constraints. An optimization problem in quadratic form is a problem with quadratic objective function
+    """Convert a given optimization problem in quadratic form into a QUBO problem.
+
+    Done by converting variables to binary and eliminating constraints.
+    An optimization problem in
+    quadratic form is a problem with quadratic objective function
     and linear constraints. A QUBO is a problem with quadratic objective function and no
     constraints. This combines several converters: `IntegerToBinary`, `InequalityToPenalty`,
     `InequalityToEquality`, `EqualityToPenalty`, and `MaximizeToMinimize`.
@@ -46,8 +49,9 @@ class OptimizationProblemToQubo(OptimizationProblemConverter):
         >>> problem2 = conv.convert(problem)
     """
 
-    def __init__(self, penalty: Optional[float] = None) -> None:
-        """
+    def __init__(self, penalty: float | None = None) -> None:
+        """Init method.
+
         Args:
             penalty: Penalty factor to scale equality constraints that are added to objective.
                 If None is passed, a penalty factor will be automatically calculated on every
@@ -65,11 +69,13 @@ class OptimizationProblemToQubo(OptimizationProblemConverter):
         ]
 
     def convert(self, problem: OptimizationProblem) -> OptimizationProblem:
-        """Convert a optimization problem into a QUBO form. The new problem has no constraints and
-        the objective function is quadratic.
+        """Convert a optimization problem into a QUBO form.
+
+        The new problem has no constraints and the objective function is quadratic.
 
         Args:
             problem: The problem with linear constraints to be solved.
+
 
         Returns:
             The problem converted in QUBO format as minimization problem.
@@ -77,7 +83,6 @@ class OptimizationProblemToQubo(OptimizationProblemConverter):
         Raises:
             OptimizationError: In case of an incompatible problem.
         """
-
         # analyze compatibility of problem
         msg = self.get_compatibility_msg(problem)
         if len(msg) > 0:
@@ -87,12 +92,14 @@ class OptimizationProblemToQubo(OptimizationProblemConverter):
             problem = conv.convert(problem)
         return problem
 
-    def interpret(self, x: Union[np.ndarray, List[float]]) -> np.ndarray:
-        """Convert the result of the converted problem back to that of the original problem
-        by applying the `interpret` method of each converter in reverse order.
+    def interpret(self, x: np.ndarray | list[float]) -> np.ndarray:
+        """Convert the result of the converted problem back to that of the original problem.
+
+        Done by applying the `interpret` method of each converter in reverse order.
 
         Args:
             x: The result of the converted problem.
+
 
         Returns:
             The result of the original problem.
@@ -103,20 +110,18 @@ class OptimizationProblemToQubo(OptimizationProblemConverter):
 
     @staticmethod
     def get_compatibility_msg(problem: OptimizationProblem) -> str:
-        """Checks whether a given problem can be solved with this optimizer.
+        """Checks whether a given problem can be converted to a QUBO form.
 
-        Checks whether the given problem is compatible, i.e., whether the problem can be converted
-        to a QUBO, and otherwise, returns a message explaining the incompatibility.
+        If the problem is not compatible, this function returns a message explaining
+        the incompatibility.
 
         The following problems are not compatible:
         - Continuous variables are not supported.
-        - Higher order objective functions are not supported.
+        - Higher-order objective functions are not supported.
         - Quadratic constraints are not supported.
-        - Higher order constraints are not supported.
-        - If there are float coefficients in constraints, the problem is not compatible because
-          inequality constraints cannot be converted to equality constraints using integer slack
-          variables.
-
+        - Higher-order constraints are not supported.
+        - Constraints with float coefficients are not supported, because inequality constraints
+        cannot be converted to equality constraints using integer slack variables.
 
         Args:
             problem: The optimization problem to check compatibility.
@@ -124,7 +129,6 @@ class OptimizationProblemToQubo(OptimizationProblemConverter):
         Returns:
             A message describing the incompatibility.
         """
-
         # initialize message
         msg = ""
         # check whether there are incompatible variable types
@@ -164,13 +168,14 @@ class OptimizationProblemToQubo(OptimizationProblemConverter):
         Args:
             problem: The optimization problem to check compatibility.
 
+
         Returns:
             Returns True if the problem is compatible, False otherwise.
         """
         return len(self.get_compatibility_msg(problem)) == 0
 
     @property
-    def penalty(self) -> Optional[float]:
+    def penalty(self) -> float | None:
         """Returns the penalty factor used in conversion.
 
         Returns:
@@ -179,7 +184,7 @@ class OptimizationProblemToQubo(OptimizationProblemConverter):
         return self._penalize_lin_eq_constraints.penalty
 
     @penalty.setter
-    def penalty(self, penalty: Optional[float]) -> None:
+    def penalty(self, penalty: float | None) -> None:
         """Set a new penalty factor.
 
         Args:

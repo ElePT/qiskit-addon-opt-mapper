@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -13,15 +13,15 @@
 """Test ScipyMilP Solver"""
 
 import unittest
-from ..optimization_test_case import OptimizationTestCase
 
 import numpy as np
 from ddt import ddt
-
 from qiskit_addon_opt_mapper import INFINITY
-from qiskit_addon_opt_mapper.solvers import SolverResultStatus, ScipyMilpSolver
 from qiskit_addon_opt_mapper.exceptions import OptimizationError
 from qiskit_addon_opt_mapper.problems import OptimizationProblem
+from qiskit_addon_opt_mapper.solvers import ScipyMilpSolver, SolverResultStatus
+
+from ..optimization_test_case import OptimizationTestCase
 
 
 @ddt

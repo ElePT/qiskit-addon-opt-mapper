@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -10,8 +10,6 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 """An application class for the number partitioning."""
-
-from typing import List
 
 import numpy as np
 from docplex.mp.model import Model
@@ -30,16 +28,20 @@ class NumberPartition(OptimizationApplication):
         https://en.wikipedia.org/wiki/Partition_problem
     """
 
-    def __init__(self, number_set: List[int]) -> None:
-        """
+    def __init__(self, number_set: list[int]) -> None:
+        """Init method.
+
         Args:
             number_set: A list of integers
         """
         self._number_set = number_set
 
     def to_optimization_problem(self) -> OptimizationProblem:
-        """Convert a number partitioning problem instance into a
+        """Represent as an optimization problem.
+
+        Convert a number partitioning problem instance into a
         :class:`~qiskit_addon_opt_mapper.problems.OptimizationProblem`
+
 
         Returns:
             The :class:`~qiskit_addon_opt_mapper.problems.OptimizationProblem` created
@@ -53,17 +55,18 @@ class NumberPartition(OptimizationApplication):
         op = from_docplex_mp(mdl)
         return op
 
-    def interpret(self, result: np.ndarray) -> List[List[int]]:
-        """Interpret a result as a list of subsets
+    def interpret(self, result: np.ndarray) -> list[list[int]]:
+        """Interpret a result as a list of subsets.
 
         Args:
             result: The calculated result of the problem
+
 
         Returns:
             A list of subsets whose sum is the half of the total.
         """
         x = self._result_to_x(result)
-        num_subsets = [[], []]  # type: List[List[int]]
+        num_subsets = [[], []]  # type: list[list[int]]
         for i, value in enumerate(x):
             if value == 0:
                 num_subsets[0].append(self._number_set[i])

@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -31,7 +31,9 @@ class TestBinaryToSpinConverter(OptimizationTestCase):
         op = OptimizationProblem()
         op.binary_var_list(3, name="x")
         op.minimize(
-            linear={"x0": 1}, quadratic={("x0", "x1"): 1}, higher_order={3: {("x0", "x1", "x2"): 1}}
+            linear={"x0": 1},
+            quadratic={("x0", "x1"): 1},
+            higher_order={3: {("x0", "x1", "x2"): 1}},
         )
         conv = BinaryToSpin()
         op2 = conv.convert(op)
@@ -62,7 +64,11 @@ class TestBinaryToSpinConverter(OptimizationTestCase):
         op.binary_var_list(3, name="x")
         op.linear_constraint(linear={"x0": 1, "x1": 1}, sense="==", rhs=1, name="c0")
         op.quadratic_constraint(
-            linear={"x0": 1, "x1": 1}, quadratic={("x0", "x1"): 1}, sense="<=", rhs=1, name="c1"
+            linear={"x0": 1, "x1": 1},
+            quadratic={("x0", "x1"): 1},
+            sense="<=",
+            rhs=1,
+            name="c1",
         )
         op.higher_order_constraint(
             linear={"x0": 1, "x1": 1},
@@ -105,7 +111,8 @@ class TestBinaryToSpinConverter(OptimizationTestCase):
             },
         )
         self.assertDictEqual(
-            c2.higher_order[3].to_dict(use_name=True), {("x0@spin", "x1@spin", "x2@spin"): -0.125}
+            c2.higher_order[3].to_dict(use_name=True),
+            {("x0@spin", "x1@spin", "x2@spin"): -0.125},
         )
 
 

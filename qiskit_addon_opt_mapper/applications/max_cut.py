@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -13,11 +13,9 @@
 
 """An application class for the Max-cut."""
 
-from typing import Dict, List, Optional
-
-import networkx as nx
 import numpy as np
 from docplex.mp.model import Model
+from rustworkx import visualization as rx_visualization
 
 from qiskit_addon_opt_mapper.problems.optimization_problem import OptimizationProblem
 from qiskit_addon_opt_mapper.translators import from_docplex_mp
@@ -34,8 +32,11 @@ class Maxcut(GraphOptimizationApplication):
     """
 
     def to_optimization_problem(self) -> OptimizationProblem:
-        """Convert a Max-cut problem instance into a
+        """Represent as an optimization problem.
+
+        Convert a Max-cut problem instance into a
         :class:`~qiskit_addon_opt_mapper.problems.OptimizationProblem`
+
 
         Returns:
             The :class:`~qiskit_addon_opt_mapper.problems.OptimizationProblem` created
@@ -59,28 +60,34 @@ class Maxcut(GraphOptimizationApplication):
     def _draw_result(
         self,
         result: np.ndarray,
-        pos: Optional[Dict[int, np.ndarray]] = None,
+        pos: dict[int, np.ndarray] | None = None,
     ) -> None:
-        """Draw the result with colors
+        """Draw the result with colors.
 
         Args:
             result : The calculated result for the problem
             pos: The positions of nodes
         """
         x = self._result_to_x(result)
-        nx.draw(self._graph, node_color=self._node_color(x), pos=pos, with_labels=True)
+        rx_visualization.mpl_draw(
+            self._graph,
+            node_color=self._node_color(x),
+            pos=pos,  # type: ignore
+            with_labels=True,
+        )
 
-    def interpret(self, result: np.ndarray) -> List[List[int]]:
-        """Interpret a result as two lists of node indices
+    def interpret(self, result: np.ndarray) -> list[list[int]]:
+        """Interpret a result as two lists of node indices.
 
         Args:
             result : The calculated result of the problem
+
 
         Returns:
             Two lists of node indices correspond to two node sets for the Max-cut
         """
         x = self._result_to_x(result)
-        cut = [[], []]  # type: List[List[int]]
+        cut = [[], []]  # type: list[list[int]]
         for i, value in enumerate(x):
             if value == 0:
                 cut[0].append(i)
@@ -88,7 +95,7 @@ class Maxcut(GraphOptimizationApplication):
                 cut[1].append(i)
         return cut
 
-    def _node_color(self, x: np.ndarray) -> List[str]:
+    def _node_color(self, x: np.ndarray) -> list[str]:
         # Return a list of strings for draw.
         # Color a node with red when the corresponding variable is 1.
         # Otherwise color it with blue.
@@ -100,6 +107,7 @@ class Maxcut(GraphOptimizationApplication):
 
         Args:
             filename: the name of the file.
+
 
         Returns:
             An adjacency matrix as a 2D numpy array.
@@ -126,11 +134,12 @@ class Maxcut(GraphOptimizationApplication):
         return w
 
     @staticmethod
-    def get_gset_result(x: np.ndarray) -> Dict[int, int]:
+    def get_gset_result(x: np.ndarray) -> dict[int, int]:
         """Get graph solution in Gset format from binary string.
 
         Args:
             x: binary string as numpy array.
+
 
         Returns:
             A graph solution in Gset format.

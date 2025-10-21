@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -17,15 +17,15 @@ from warnings import warn
 import numpy as np
 
 from qiskit_addon_opt_mapper import INFINITY
-from qiskit_addon_opt_mapper.solvers.solver import (
-    OptimizationSolver,
-    SolverResult,
-    SolverResultStatus,
-)
 from qiskit_addon_opt_mapper.problems.optimization_problem import (
     ConstraintSense,
     OptimizationProblem,
     VarType,
+)
+from qiskit_addon_opt_mapper.solvers.solver import (
+    OptimizationSolver,
+    SolverResult,
+    SolverResultStatus,
 )
 
 
@@ -34,10 +34,9 @@ def _conv_inf(val):
     # while scipy treats np.inf as infinity
     if val <= -INFINITY:
         return -np.inf
-    elif val >= INFINITY:
+    if val >= INFINITY:
         return np.inf
-    else:
-        return val
+    return val
 
 
 class ScipyMilpSolver(OptimizationSolver):
@@ -83,6 +82,7 @@ class ScipyMilpSolver(OptimizationSolver):
 
         Args:
             problem: The optimization problem to check compatibility.
+
 
         Returns:
             An empty string (if compatible) or a string describing the incompatibility.
@@ -144,6 +144,7 @@ class ScipyMilpSolver(OptimizationSolver):
         Args:
             problem: The problem to be solved.
 
+
         Returns:
             The result of the optimizer applied to the problem.
 
@@ -164,7 +165,10 @@ class ScipyMilpSolver(OptimizationSolver):
         )
 
         if raw_result.x is None:
-            warn("scipy.milp cannot solve the model. See `raw_results` for details.")
+            warn(
+                "scipy.milp cannot solve the model. See `raw_results` for details.",
+                stacklevel=2,
+            )
             x = [0.0] * problem.get_num_vars()
             status = SolverResultStatus.FAILURE
         else:

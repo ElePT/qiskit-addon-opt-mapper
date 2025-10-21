@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -10,10 +10,9 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Translator between an Ising Hamiltonian and a optimization problem"""
+"""Translator between an Ising Hamiltonian and a optimization problem."""
 
 import itertools
-from typing import Tuple
 
 import numpy as np
 from qiskit.quantum_info import Pauli, SparsePauliOp
@@ -22,7 +21,7 @@ from qiskit_addon_opt_mapper.exceptions import OptimizationError
 from qiskit_addon_opt_mapper.problems.optimization_problem import OptimizationProblem
 
 
-def to_ising(optimization_problem: OptimizationProblem) -> Tuple[SparsePauliOp, float]:
+def to_ising(optimization_problem: OptimizationProblem) -> tuple[SparsePauliOp, float]:
     """Return the Ising Hamiltonian of this problem.
 
     Variables are mapped to qubits in the same order, i.e.,
@@ -30,7 +29,7 @@ def to_ising(optimization_problem: OptimizationProblem) -> Tuple[SparsePauliOp, 
     See https://github.com/Qiskit/qiskit-terra/issues/1148 for details.
 
     Args:
-        quad_prog: The problem to be translated.
+        optimization_problem: The problem to be translated.
 
     Returns:
         A tuple (qubit_op, offset) comprising the qubit operator for the problem
@@ -77,8 +76,8 @@ def to_ising(optimization_problem: OptimizationProblem) -> Tuple[SparsePauliOp, 
         for (
             i,
             j,
-        ), high_order_exp in optimization_problem.objective.quadratic.to_dict().items():
-            weight = high_order_exp * sense / 4
+        ), quadratic_exp in optimization_problem.objective.quadratic.to_dict().items():
+            weight = quadratic_exp * sense / 4
 
             if i == j:
                 offset += weight
@@ -99,13 +98,13 @@ def to_ising(optimization_problem: OptimizationProblem) -> Tuple[SparsePauliOp, 
             offset += weight
 
         # convert higher order terms of the objective function into Hamiltonian.
-        for (
+        for (  # type: ignore
             degree,
             high_order_exp,
         ) in optimization_problem.objective.higher_order.items():
             # For each binary term of order k we get Pauli spins with orders ranging from 0 to k due
             # to the expansion (1-z0)(1-z1)(1-z2) ... / 2**k for a term x0x1x2..., for example.
-            for variables, coef in high_order_exp.to_dict().items():
+            for variables, coef in high_order_exp.to_dict().items():  # type: ignore
                 for i in range(1, degree + 1):
                     for comb in itertools.combinations(variables, i):
                         weight = coef * sense * (-1) ** (i) / (2 ** (degree))
@@ -115,7 +114,7 @@ def to_ising(optimization_problem: OptimizationProblem) -> Tuple[SparsePauliOp, 
                         # comb takes (0,), (1,), and (2,)
                         # and we add IIZ, IZI, and ZII to pauli_list.
                         z_p = zero.copy()
-                        for idx in comb:
+                        for idx in comb:  # type: ignore
                             z_p[idx] = not z_p[idx]
                         pauli_list.append(SparsePauliOp(Pauli((z_p, zero)), weight))
                 offset += coef * sense / (2 ** (degree))
@@ -147,7 +146,6 @@ def to_ising(optimization_problem: OptimizationProblem) -> Tuple[SparsePauliOp, 
             i,
             j,
         ), coef in optimization_problem.objective.quadratic.to_dict().items():
-
             if i == j:
                 offset += coef * sense
             else:
@@ -157,11 +155,11 @@ def to_ising(optimization_problem: OptimizationProblem) -> Tuple[SparsePauliOp, 
                 pauli_list.append(SparsePauliOp(Pauli((z_p, zero)), coef * sense))
 
         # convert higher order terms of the objective function into Hamiltonian.
-        for (
+        for (  # type: ignore
             _degree,
             high_order_exp,
         ) in optimization_problem.objective.higher_order.items():
-            for variables, coef in high_order_exp.to_dict().items():
+            for variables, coef in high_order_exp.to_dict().items():  # type: ignore
                 z_p = zero.copy()
                 for idx in variables:
                     z_p[idx] = not z_p[idx]

@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -12,7 +12,7 @@
 
 """A converter from OptimizationProblem to HUBO form."""
 
-from typing import List, Optional, Union, cast
+from typing import cast
 
 import numpy as np
 
@@ -28,26 +28,29 @@ from .optimization_problem_converter import OptimizationProblemConverter
 
 
 class OptimizationProblemToHubo(OptimizationProblemConverter):
-    """Convert an optimization problem into a HUBO form
-    (higher-order objective function with no constraints) by converting variables to binary and
-    eliminating constraints. The new problem has no constraints and the objective function is higher
-    order polynomial. This combines several converters: `IntegerToBinary`, `InequalityToPenalty`,
-    `EqualityToPenalty`, and `MaximizeToMinimize`, while preserving higher-order terms in the
-    objective function. The resulting HUBO problem can be directly mapped to an Ising Hamiltonian
-    using the `to_ising()` function.
+    """Convert an optimization problem into a HUBO form.
 
+    HUBO stands for "higher-order unconstrained binary optimization".
+    The conversion is achieved by converting variables to binary and eliminating constraints.
+    The resulting problem has no constraints and a higher-order polynomial objective function.
+    This combines several converters: `IntegerToBinary`, `InequalityToPenalty`,
+    `EqualityToPenalty`, and `MaximizeToMinimize`, while preserving higher-order terms
+    in the objective function. The resulting HUBO problem can be directly mapped to
+    an Ising Hamiltonian using the `to_ising()` function.
 
-    Examples:
-        >>> from qiskit_addon_opt_mapper.problems import OptimizationProblem
-        >>> from qiskit_addon_opt_mapper.converters import OptimizationProblemToHubo
-        >>> problem = OptimizationProblem()
-        >>> # define a problem
-        >>> conv = OptimizationProblemToHubo()
-        >>> problem2 = conv.convert(problem)
+    **Examples**
+
+    >>> from qiskit_addon_opt_mapper.problems import OptimizationProblem
+    >>> from qiskit_addon_opt_mapper.converters import OptimizationProblemToHubo
+    >>> problem = OptimizationProblem()
+    >>> # define a problem
+    >>> conv = OptimizationProblemToHubo()
+    >>> problem2 = conv.convert(problem)
     """
 
-    def __init__(self, penalty: Optional[float] = None) -> None:
-        """
+    def __init__(self, penalty: float | None = None) -> None:
+        """Init method.
+
         Args:
             penalty: Penalty factor to scale equality constraints that are added to objective.
                 If None is passed, a penalty factor will be automatically calculated on every
@@ -65,11 +68,13 @@ class OptimizationProblemToHubo(OptimizationProblemConverter):
         ]
 
     def convert(self, problem: OptimizationProblem) -> OptimizationProblem:
-        """Convert an optimization problem into a HUBO form. The new problem has no constraints and
-        the objective function is higher order polynomial.
+        """Convert an optimization problem into a HUBO form.
+
+        The new problem has no constraints and the objective function is higher order polynomial.
 
         Args:
             problem: An optimization problem to be converted.
+
 
         Returns:
             A new optimization problem in the HUBO form.
@@ -86,12 +91,14 @@ class OptimizationProblemToHubo(OptimizationProblemConverter):
 
         return problem
 
-    def interpret(self, x: Union[np.ndarray, List[float]]) -> np.ndarray:
-        """Convert the result of the converted problem back to that of the original problem
-        by applying the `interpret` method of each converter in reverse order.
+    def interpret(self, x: np.ndarray | list[float]) -> np.ndarray:
+        """Convert the result of the converted problem back to that of the original problem.
+
+        Done by applying the `interpret` method of each converter in reverse order.
 
         Args:
             x: A solution vector of the converted problem.
+
 
         Returns:
             A solution vector of the original problem.
@@ -103,14 +110,15 @@ class OptimizationProblemToHubo(OptimizationProblemConverter):
 
     @staticmethod
     def get_compatibility_msg(problem: OptimizationProblem) -> str:
-        """Checks whether the given problem is compatible, i.e., whether the problem can be
-        converted to a HUBO, and otherwise, returns a message explaining the incompatibility.
+        """Checks whether the given problem is compatible with HUBO conversion.
+
+        A problem is compatible if it can be converted to a HUBO (Higher-order Unconstrained Binary Optimization).
+        If not, this function returns a message explaining the incompatibility.
 
         The following problems are not compatible:
         - Continuous variables are not supported.
-        - If there are float coefficients in constraints, the problem is not compatible because
-          inequality constraints cannot be converted to equality constraints using integer slack
-          variables.
+        - Constraints with float coefficients are not supported, because inequality constraints cannot be
+        converted to equality constraints using integer slack variables.
 
         Args:
             problem: The optimization problem to check compatibility.
@@ -118,7 +126,6 @@ class OptimizationProblemToHubo(OptimizationProblemConverter):
         Returns:
             A message describing the incompatibility.
         """
-
         # initialize message
         msg = ""
         # check whether there are incompatible variable types
@@ -160,13 +167,14 @@ class OptimizationProblemToHubo(OptimizationProblemConverter):
         Args:
             problem: The optimization problem to check compatibility.
 
+
         Returns:
             Returns True if the problem is compatible, False otherwise.
         """
         return len(self.get_compatibility_msg(problem)) == 0
 
     @property
-    def penalty(self) -> Optional[float]:
+    def penalty(self) -> float | None:
         """Returns the penalty factor used in conversion.
 
         Returns:
@@ -175,7 +183,7 @@ class OptimizationProblemToHubo(OptimizationProblemConverter):
         return self._penalize_eq_constraints.penalty
 
     @penalty.setter
-    def penalty(self, penalty: Optional[float]) -> None:
+    def penalty(self, penalty: float | None) -> None:
         """Set a new penalty factor.
 
         Args:

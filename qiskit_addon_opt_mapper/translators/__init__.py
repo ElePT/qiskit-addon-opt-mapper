@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -10,9 +10,10 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
-Optimization problem translators (:mod:`qiskit_addon_opt_mapper.translators`)
-======================================================================
+"""Translators.
+
+Optimization problem translators (:mod:`qiskit_addon_opt_mapper.translators`).
+==============================================================================
 
 .. currentmodule:: qiskit_addon_opt_mapper.translators
 
@@ -27,7 +28,6 @@ Translators
 
    from_docplex_mp
    to_docplex_mp
-   from_ising
    to_ising
 """
 

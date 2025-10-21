@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -10,8 +10,9 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
-Classical Solvers (:mod:`qiskit_addon_opt_mapper.solvers`)
+"""Solvers module.
+
+Classical Solvers (:mod:`qiskit_addon_opt_mapper.solvers`).
 ===============================================================
 
 .. currentmodule:: qiskit_addon_opt_mapper.solvers
@@ -40,16 +41,16 @@ Classical Solvers
 
 """
 
-from .solver import OptimizationSolver, SolverResult, SolverResultStatus
 from .cplex_solver import CplexSolver
 from .gurobi_solver import GurobiSolver
 from .scipy_milp_solver import ScipyMilpSolver
+from .solver import OptimizationSolver, SolverResult, SolverResultStatus
 
 __all__ = [
     "CplexSolver",
     "GurobiSolver",
-    "ScipyMilpSolver",
     "OptimizationSolver",
+    "ScipyMilpSolver",
     "SolverResult",
     "SolverResultStatus",
 ]

@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -13,7 +13,7 @@
 """Linear expression interface."""
 
 from dataclasses import dataclass
-from typing import Any, Dict, List, Union
+from typing import Any, cast
 
 from numpy import array, ndarray
 from scipy.sparse import dok_matrix, spmatrix
@@ -25,7 +25,7 @@ from .optimization_problem_element import OptimizationProblemElement
 
 @dataclass
 class ExpressionBounds:
-    """Lower bound and upper bound of a linear expression or a quadratic expression"""
+    """Lower bound and upper bound of a linear expression or a quadratic expression."""
 
     lowerbound: float
     """Lower bound"""
@@ -40,7 +40,7 @@ class LinearExpression(OptimizationProblemElement):
     def __init__(
         self,
         optimization_problem: Any,
-        coefficients: Union[ndarray, spmatrix, List[float], Dict[Union[int, str], float]],
+        coefficients: ndarray | spmatrix | list[float] | dict[int | str, float],
     ) -> None:
         """Creates a new linear expression.
 
@@ -56,31 +56,34 @@ class LinearExpression(OptimizationProblemElement):
         super().__init__(optimization_problem)
         self.coefficients = coefficients
 
-    def __getitem__(self, i: Union[int, str]) -> float:
+    def __getitem__(self, i: int | str) -> float:
         """Returns the i-th coefficient where i can be a variable name or index.
 
         Args:
             i: the index or name of the variable corresponding to the coefficient.
+
 
         Returns:
             The coefficient corresponding to the addressed variable.
         """
         if isinstance(i, str):
             i = self.optimization_problem.variables_index[i]
-        return self.coefficients[0, i]
+        return float(self.coefficients[0, i])
 
-    def __setitem__(self, i: Union[int, str], value: float) -> None:
+    def __setitem__(self, i: int | str, value: float) -> None:
+        """Set item for LinearExpression."""
         if isinstance(i, str):
             i = self.optimization_problem.variables_index[i]
         self._coefficients[0, i] = value
 
     def _coeffs_to_dok_matrix(
-        self, coefficients: Union[ndarray, spmatrix, List, Dict[Union[int, str], float]]
+        self, coefficients: ndarray | spmatrix | list | dict[int | str, float]
     ) -> dok_matrix:
         """Maps given 1d-coefficients to a dok_matrix.
 
         Args:
             coefficients: The 1d-coefficients to be mapped.
+
 
         Returns:
             The given 1d-coefficients as a dok_matrix
@@ -141,7 +144,7 @@ class LinearExpression(OptimizationProblemElement):
     @coefficients.setter
     def coefficients(
         self,
-        coefficients: Union[ndarray, spmatrix, List[float], Dict[Union[str, int], float]],
+        coefficients: ndarray | spmatrix | list[float] | dict[int | str, float],
     ) -> None:
         """Sets the coefficients of the linear expression.
 
@@ -156,14 +159,16 @@ class LinearExpression(OptimizationProblemElement):
         Returns:
             An array with the coefficients corresponding to the linear expression.
         """
-        return self._coefficients.toarray()[0]
+        return cast(ndarray, self._coefficients.toarray()[0])
 
-    def to_dict(self, use_name: bool = False) -> Dict[Union[int, str], float]:
-        """Returns the coefficients of the linear expression as dictionary, either using variable
-        names or indices as keys.
+    def to_dict(self, use_name: bool = False) -> dict[int | str, float]:
+        """Returns the coefficients of the linear expression as dictionary.
+
+        Either using variable names or indices as keys.
 
         Args:
             use_name: Determines whether to use index or names to refer to variables.
+
 
         Returns:
             An dictionary with the coefficients corresponding to the linear expression.
@@ -173,14 +178,14 @@ class LinearExpression(OptimizationProblemElement):
                 self.optimization_problem.variables[k].name: float(v)
                 for (_, k), v in self._coefficients.items()
             }
-        else:
-            return {k: float(v) for (_, k), v in self._coefficients.items()}
+        return {k: float(v) for (_, k), v in self._coefficients.items()}
 
-    def evaluate(self, x: Union[ndarray, List, Dict[Union[int, str], float]]) -> float:
+    def evaluate(self, x: ndarray | list | dict[int | str, float]) -> float:
         """Evaluate the linear expression for given variables.
 
         Args:
             x: The values of the variables to be evaluated.
+
 
         Returns:
             The value of the linear expression given the variable values.
@@ -192,25 +197,25 @@ class LinearExpression(OptimizationProblemElement):
         val = (x @ self.coefficients.transpose())[0, 0]
 
         # return the result
-        return val
+        return float(val)
 
     # pylint: disable=unused-argument
-    def evaluate_gradient(self, x: Union[ndarray, List, Dict[Union[int, str], float]]) -> ndarray:
+    def evaluate_gradient(self, x: ndarray | list | dict[int | str, float]) -> ndarray:
         """Evaluate the gradient of the linear expression for given variables.
 
         Args:
             x: The values of the variables to be evaluated.
 
+
         Returns:
             The value of the gradient of the linear expression given the variable values.
         """
-
         # extract the coefficients as array and return it
         return self.to_array()
 
     @property
     def bounds(self) -> ExpressionBounds:
-        """Returns the lower bound and the upper bound of the linear expression
+        """Returns the lower bound and the upper bound of the linear expression.
 
         Returns:
             The lower bound and the upper bound of the linear expression
@@ -232,12 +237,14 @@ class LinearExpression(OptimizationProblemElement):
         return ExpressionBounds(lowerbound=l_b, upperbound=u_b)
 
     def __repr__(self):
+        """Repr. for LinearExpression."""
         # pylint: disable=cyclic-import
         from ..translators.prettyprint import DEFAULT_TRUNCATE, expr2str
 
         return f"<{self.__class__.__name__}: {expr2str(linear=self, truncate=DEFAULT_TRUNCATE)}>"
 
     def __str__(self):
+        """Str. for LinearExpression."""
         # pylint: disable=cyclic-import
         from ..translators.prettyprint import expr2str
 

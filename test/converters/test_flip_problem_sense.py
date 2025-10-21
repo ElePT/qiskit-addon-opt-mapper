@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -11,6 +11,7 @@
 # that they have been altered from the originals.
 
 """Flip problem sense tests."""
+
 import unittest
 
 from qiskit_addon_opt_mapper import OptimizationProblem

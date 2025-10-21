@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -11,14 +11,15 @@
 # that they have been altered from the originals.
 
 
-"""
-Optimization problems (:mod:`qiskit_addon_opt_mapper.problems`)
-===========================================================
+"""Optimization problem model elements.
+
+Optimization problems (:mod:`qiskit_addon_opt_mapper.problems`).
+===================================================================
 
 .. currentmodule:: qiskit_addon_opt_mapper.problems
 
 Optimization problem
------------------
+----------------------
 Structures for defining an optimization problem.
 
 Note:
@@ -35,7 +36,7 @@ Note:
    LinearConstraint
    QuadraticExpression
    QuadraticConstraint
-   QuadraticProgramElement
+   OptimizationProblemElement
    Variable
    HigherOrderExpression
    HigherOrderConstraint
@@ -57,16 +58,16 @@ from .variable import Variable, VarType
 
 __all__ = [
     "Constraint",
-    "LinearExpression",
-    "LinearConstraint",
-    "QuadraticExpression",
-    "QuadraticConstraint",
-    "OptimizationObjective",
-    "ObjSense",
-    "HigherOrderExpression",
     "HigherOrderConstraint",
+    "HigherOrderExpression",
+    "LinearConstraint",
+    "LinearExpression",
+    "ObjSense",
+    "OptimizationObjective",
     "OptimizationProblem",
     "OptimizationProblemElement",
-    "Variable",
+    "QuadraticConstraint",
+    "QuadraticExpression",
     "VarType",
+    "Variable",
 ]

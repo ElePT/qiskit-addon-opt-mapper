@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -13,7 +13,6 @@
 """Converter that converts all binary variables to spin variables."""
 
 import copy
-from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 
@@ -46,11 +45,12 @@ class BinaryToSpin(OptimizationProblemConverter):
     _delimiter = "@"
 
     def __init__(self) -> None:
-        self._src: Optional[OptimizationProblem] = None
-        self._dst: Optional[OptimizationProblem] = None
-        self._b2s: Dict[str, str] = {}  # original binary name -> new spin name
-        self._subst: Dict[str, _Subst] = {}  # name -> (const, coeff, spin_name)
-        self._src_num_vars: Optional[int] = None
+        """Initialize converter."""
+        self._src: OptimizationProblem | None = None
+        self._dst: OptimizationProblem | None = None
+        self._b2s: dict[str, str] = {}  # original binary name -> new spin name
+        self._subst: dict[str, _Subst] = {}  # name -> (const, coeff, spin_name)
+        self._src_num_vars: int | None = None
 
     # ---- public API ----
 
@@ -110,20 +110,21 @@ class BinaryToSpin(OptimizationProblemConverter):
 
         return self._dst
 
-    def interpret(self, x: Union[np.ndarray, List[float]]) -> np.ndarray:
+    def interpret(self, x: np.ndarray | list[float]) -> np.ndarray:
         """Convert a solution of the converted problem back to a solution of the original problem.
 
         For binaries that became spins, we use b = (1 - s)/2.
         """
+        assert self._dst is not None and self._src_num_vars and self._src is not None
         # Build a name->value map from dst solution order
         if len(x) != self._dst.get_num_vars():
             raise OptimizationError("Result length does not match converted problem.")
-        dst_vals: Dict[str, float] = {}
+        dst_vals: dict[str, float] = {}
         for i, var in enumerate(self._dst.variables):
             dst_vals[var.name] = float(x[i])
 
         # Compose original vector order
-        out = np.zeros(self._src_num_vars, dtype=float)
+        out = np.zeros(self._src_num_vars)
         for i, var in enumerate(self._src.variables):
             if var.vartype == Variable.Type.BINARY:
                 s = dst_vals[self._b2s[var.name]]
@@ -135,16 +136,18 @@ class BinaryToSpin(OptimizationProblemConverter):
     # ---- private methods ----
 
     def _apply_b2s_subst(self, f: Poly) -> Poly:
-        """Apply b = 0.5 - 0.5 s to every variable in polynomial f. where b is binary variable
-        and s is spin variable."""
+        """Apply b = 0.5 - 0.5 s to every variable in polynomial f.
+
+        Where b is binary variable and s is spin variable.
+        """
         out: Poly = {}
         for m, coef in f.items():
             # Build options for each factor in monomial
-            factors: List[List[Tuple[Monomial, float]]] = []
+            factors: list[list[tuple[Monomial, float]]] = []
             zero_flag = False
             for name in m:
                 subst = self._subst.get(name, _Subst(const=0.0, coeff=1.0, var=name))
-                opts: List[Tuple[Monomial, float]] = []
+                opts: list[tuple[Monomial, float]] = []
                 if subst.const != 0.0:
                     opts.append(((), subst.const))
                 if subst.var is not None and subst.coeff != 0.0:
@@ -157,9 +160,9 @@ class BinaryToSpin(OptimizationProblemConverter):
                 continue
 
             # Convolution
-            monoms: List[Tuple[Monomial, float]] = [((), 1.0)]
+            monoms: list[tuple[Monomial, float]] = [((), 1.0)]
             for opts in factors:
-                nxt: List[Tuple[Monomial, float]] = []
+                nxt: list[tuple[Monomial, float]] = []
                 for m0, c0 in monoms:
                     for m1, c1 in opts:
                         nxt.append((_norm(m0 + m1), c0 * c1))
@@ -172,19 +175,19 @@ class BinaryToSpin(OptimizationProblemConverter):
 
     def _convert_objective(self) -> None:
         """Convert the objective of the source problem and set it to the destination problem."""
+        assert self._dst is not None and self._src is not None
         obj = self._src.objective
-
         # Build polynomial f from original objective
         f: Poly = {}
         _poly_add(f, _poly_from_linear(obj.linear))
         _poly_add(f, _poly_from_quadratic(obj.quadratic))
         # higher order (if any)
         if obj.higher_order:
-            # obj.higher_order: Dict[int, Expr], each Expr.to_dict(use_name=True)
+            # obj.higher_order: dict[int, Expr], each Expr.to_dict(use_name=True)
             for _, expr in obj.higher_order.items():
                 for names, coef in expr.to_dict(use_name=True).items():
                     if coef != 0.0:
-                        _poly_add(f, {tuple(names): float(coef)})
+                        _poly_add(f, {tuple(names): float(coef)})  # type: ignore
 
         # Apply substitution
         g = self._apply_b2s_subst(f)
@@ -199,6 +202,7 @@ class BinaryToSpin(OptimizationProblemConverter):
 
     def _emit_constraint_from_poly(self, name: str, sense, rhs: float, poly: Poly) -> None:
         """Emit a constraint to the destination problem from a polynomial form."""
+        assert self._dst is not None
         c0, ldict, qdict, hdict = _poly_split(poly)
         rhs2 = rhs - c0
         if hdict:
@@ -209,16 +213,22 @@ class BinaryToSpin(OptimizationProblemConverter):
             self._dst.linear_constraint(ldict, sense, rhs2, name)
 
     def _convert_linear_constraints(self) -> None:
-        """Convert linear constraints of the source problem and add them to the destination
-        problem."""
+        """Convert linear constraints of the source problem.
+
+        Add them to the destination problem.
+        """
+        assert self._src is not None
         for c in self._src.linear_constraints:
             f: Poly = _poly_from_linear(c.linear)
             g = self._apply_b2s_subst(f)
             self._emit_constraint_from_poly(c.name, c.sense, c.rhs, g)
 
     def _convert_quadratic_constraints(self) -> None:
-        """Convert quadratic constraints of the source problem and add them to the destination
-        problem."""
+        """Convert quadratic constraints of the source problem.
+
+        Add them to the destination problem.
+        """
+        assert self._src is not None
         for c in self._src.quadratic_constraints:
             f: Poly = {}
             _poly_add(f, _poly_from_linear(c.linear))
@@ -227,8 +237,10 @@ class BinaryToSpin(OptimizationProblemConverter):
             self._emit_constraint_from_poly(c.name, c.sense, c.rhs, g)
 
     def _convert_higher_order_constraints(self) -> None:
-        """Convert higher-order constraints of the source problem and add them to the destination
-        problem."""
+        """Convert higher-order constraints of the source problem.
+
+        Add them to the destination problem.
+        """
         for c in getattr(self._src, "higher_order_constraints", []):
             f: Poly = {}
             _poly_add(f, _poly_from_linear(c.linear))

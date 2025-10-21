@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -11,12 +11,12 @@
 # that they have been altered from the originals.
 
 """Test Tsp class"""
+
 import random
 import unittest
 
 import networkx as nx
 import numpy as np
-
 from qiskit_addon_opt_mapper import OptimizationProblem
 from qiskit_addon_opt_mapper.applications.tsp import Tsp
 from qiskit_addon_opt_mapper.problems import Constraint, OptimizationObjective, VarType

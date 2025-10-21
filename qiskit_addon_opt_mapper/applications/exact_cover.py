@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -11,7 +11,8 @@
 # that they have been altered from the originals.
 
 """An application class for the exact cover."""
-from typing import List, cast
+
+from typing import cast
 
 import numpy as np
 from docplex.mp.model import Model
@@ -30,8 +31,9 @@ class ExactCover(OptimizationApplication):
         https://en.wikipedia.org/wiki/Exact_cover
     """
 
-    def __init__(self, subsets: List[List[int]]) -> None:
-        """
+    def __init__(self, subsets: list[list[int]]) -> None:
+        """Init method.
+
         Args:
             subsets: A list of subsets
         """
@@ -39,11 +41,14 @@ class ExactCover(OptimizationApplication):
         self._set = []
         for sub in self._subsets:
             self._set.extend(sub)
-        self._set = cast(List, np.unique(self._set))
+        self._set = cast(list, np.unique(self._set))
 
     def to_optimization_problem(self) -> OptimizationProblem:
-        """Convert an exact cover instance into a
+        """Represent as an optimization problem.
+
+        Convert an exact cover instance into a
         :class:`~qiskit_addon_opt_mapper.problems.OptimizationProblem`
+
 
         Returns:
             The :class:`~qiskit_addon_opt_mapper.problems.OptimizationProblem` created
@@ -59,11 +64,12 @@ class ExactCover(OptimizationApplication):
         op = from_docplex_mp(mdl)
         return op
 
-    def interpret(self, result: np.ndarray) -> List[List[int]]:
-        """Interpret a result as a list of subsets
+    def interpret(self, result: np.ndarray) -> list[list[int]]:
+        """Interpret a result as a list of subsets.
 
         Args:
             result: The calculated result of the problem
+
 
         Returns:
             A list of subsets whose corresponding variable is 1

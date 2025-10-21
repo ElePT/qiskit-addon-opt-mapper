@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -12,7 +12,6 @@
 """Converter that converts all spin variables to binary variables."""
 
 import copy
-from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 
@@ -37,19 +36,22 @@ from .util import (
 class SpinToBinary(OptimizationProblemConverter):
     """Convert all spin variables in the problem to binary variables.
 
-    The conversion is done by the relation
+    The conversion is done by the relation::
+
         s_i = 1 - 2 b_i
+
     where s_i is a spin variable (in {-1, +1}) and b_i is a binary variable (in {0, 1}).
     """
 
     _delimiter = "@"
 
     def __init__(self) -> None:
-        self._src: Optional[OptimizationProblem] = None
-        self._dst: Optional[OptimizationProblem] = None
-        self._s2b: Dict[str, str] = {}  # original spin name -> new binary name
-        self._subst: Dict[str, _Subst] = {}  # name -> (const, coeff, bin_name)
-        self._src_num_vars: Optional[int] = None
+        """Class initializer."""
+        self._src: OptimizationProblem | None = None
+        self._dst: OptimizationProblem | None = None
+        self._s2b: dict[str, str] = {}  # original spin name -> new binary name
+        self._subst: dict[str, _Subst] = {}  # name -> (const, coeff, bin_name)
+        self._src_num_vars: int | None = None
 
     # ---- public API ----
 
@@ -110,18 +112,19 @@ class SpinToBinary(OptimizationProblemConverter):
 
         return self._dst
 
-    def interpret(self, x: Union[np.ndarray, List[float]]) -> np.ndarray:
+    def interpret(self, x: np.ndarray | list[float]) -> np.ndarray:
         """Convert a solution of the converted (binary) problem back to the original (spin) space.
+
         For spins we use s = 1 - 2 b.
         """
         if len(x) != self._dst.get_num_vars():  # type: ignore[union-attr]
             raise OptimizationError("Result length does not match converted problem.")
 
-        dst_vals: Dict[str, float] = {}
+        dst_vals: dict[str, float] = {}
         for i, var in enumerate(self._dst.variables):  # type: ignore[union-attr]
             dst_vals[var.name] = float(x[i])
 
-        out = np.zeros(self._src_num_vars, dtype=float)
+        out = np.zeros(self._src_num_vars)  # type: ignore[arg-type]
         for i, var in enumerate(self._src.variables):  # type: ignore[union-attr]
             if var.vartype == Variable.Type.SPIN:
                 b = dst_vals[self._s2b[var.name]]
@@ -133,17 +136,19 @@ class SpinToBinary(OptimizationProblemConverter):
     # ---- private methods ----
 
     def _apply_s2b_subst(self, f: Poly) -> Poly:
-        """Apply s = 1 - 2 b to every variable in polynomial f where s is spin variable and b
-        is binary variable."""
+        """Apply s = 1 - 2 b to every variable in polynomial f.
+
+        Where s is spin variable and b is binary variable.
+        """
         out: Poly = {}
         for m, coef in f.items():
-            # Build options for each factor in monomial
-            factors: List[List[Tuple[Monomial, float]]] = []
+            # Build olist[s for each factor in monomial
+            factors: list[list[tuple[Monomial, float]]] = []
             zero_flag = False
             for name in m:
                 # default: identity for non-spin variables
                 subst = self._subst.get(name, _Subst(const=0.0, coeff=1.0, var=name))
-                opts: List[Tuple[Monomial, float]] = []
+                opts: list[tuple[Monomial, float]] = []
                 if subst.const != 0.0:
                     opts.append(((), subst.const))  # constant part
                 if subst.var is not None and subst.coeff != 0.0:
@@ -156,9 +161,9 @@ class SpinToBinary(OptimizationProblemConverter):
                 continue
 
             # Convolution (distributive expansion)
-            monoms: List[Tuple[Monomial, float]] = [((), 1.0)]
+            monoms: list[tuple[Monomial, float]] = [((), 1.0)]
             for opts in factors:
-                nxt: List[Tuple[Monomial, float]] = []
+                nxt: list[tuple[Monomial, float]] = []
                 for m0, c0 in monoms:
                     for m1, c1 in opts:
                         nxt.append((_norm(m0 + m1), c0 * c1))
@@ -170,7 +175,11 @@ class SpinToBinary(OptimizationProblemConverter):
         return out
 
     def _convert_objective(self) -> None:
-        """Convert the objective of the source problem and set it to the destination problem."""
+        """Convert the objective of the source problem.
+
+        Set it to the destination problem.
+        """
+        assert self._src is not None and self._dst is not None
         obj = self._src.objective
 
         # Build polynomial from original objective
@@ -181,7 +190,7 @@ class SpinToBinary(OptimizationProblemConverter):
             for _, expr in obj.higher_order.items():
                 for names, coef in expr.to_dict(use_name=True).items():
                     if coef != 0.0:
-                        _poly_add(f, {tuple(names): float(coef)})
+                        _poly_add(f, {tuple(names): float(coef)})  # type: ignore[arg-type]
 
         # Apply substitution
         g = self._apply_s2b_subst(f)
@@ -195,6 +204,7 @@ class SpinToBinary(OptimizationProblemConverter):
 
     def _emit_constraint_from_poly(self, name: str, sense, rhs: float, poly: Poly) -> None:
         """Emit a constraint to the destination problem from a polynomial form."""
+        assert self._dst is not None
         c0, ldict, qdict, hdict = _poly_split(poly)
         rhs2 = rhs - c0
         if hdict:
@@ -208,16 +218,20 @@ class SpinToBinary(OptimizationProblemConverter):
             self._dst.linear_constraint({}, sense, rhs2, name)
 
     def _convert_linear_constraints(self) -> None:
-        """Convert linear constraints of the source problem and add them to the destination
-        problem."""
+        """Convert linear constraints of the source problem.
+
+        Add them to the destination problem.
+        """
         for c in self._src.linear_constraints:  # type: ignore[union-attr]
             f: Poly = _poly_from_linear(c.linear)
             g = self._apply_s2b_subst(f)
             self._emit_constraint_from_poly(c.name, c.sense, c.rhs, g)
 
     def _convert_quadratic_constraints(self) -> None:
-        """Convert quadratic constraints of the source problem and add them to the destination
-        problem."""
+        """Convert quadratic constraints of the source problem.
+
+        Add them to the destination problem.
+        """
         for c in self._src.quadratic_constraints:  # type: ignore[union-attr]
             f: Poly = {}
             _poly_add(f, _poly_from_linear(c.linear))
@@ -226,8 +240,10 @@ class SpinToBinary(OptimizationProblemConverter):
             self._emit_constraint_from_poly(c.name, c.sense, c.rhs, g)
 
     def _convert_higher_order_constraints(self) -> None:
-        """Convert higher-order constraints of the source problem and add them to the destination
-        problem."""
+        """Convert higher-order constraints of the source problem.
+
+        Add them to the destination problem.
+        """
         for c in getattr(self._src, "higher_order_constraints", []):  # type: ignore[union-attr]
             f: Poly = {}
             _poly_add(f, _poly_from_linear(c.linear))

@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -11,7 +11,6 @@
 # that they have been altered from the originals.
 
 """Infinity constant."""
-
 
 INFINITY = 1.0e20  # pylint: disable=invalid-name
 """ A constant for infinity. """

@@ -1,6 +1,7 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
+#
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
 # of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
@@ -8,16 +9,17 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
+
 """The inequality to equality converter."""
 
 import copy
 import math
-from typing import List, Optional, Union
 
 import numpy as np
 
 from ..exceptions import OptimizationError
 from ..problems.constraint import Constraint
+from ..problems.higher_order_constraint import HigherOrderConstraint
 from ..problems.linear_constraint import LinearConstraint
 from ..problems.optimization_objective import OptimizationObjective
 from ..problems.optimization_problem import OptimizationProblem
@@ -41,7 +43,8 @@ class InequalityToEquality(OptimizationProblemConverter):
     _delimiter = "@"  # users are supposed not to use this character in variable names
 
     def __init__(self, mode: str = "auto") -> None:
-        """
+        """Init method.
+
         Args:
             mode: To choose the type of slack variables. There are 3 options for mode.
 
@@ -49,8 +52,8 @@ class InequalityToEquality(OptimizationProblemConverter):
                 - 'continuous': All slack variables will be continuous variables.
                 - 'auto': Use integer variables if possible, otherwise use continuous variables.
         """
-        self._src: Optional[OptimizationProblem] = None
-        self._dst: Optional[OptimizationProblem] = None
+        self._src: OptimizationProblem | None = None
+        self._dst: OptimizationProblem | None = None
         self._mode = mode
 
     def convert(self, problem: OptimizationProblem) -> OptimizationProblem:
@@ -58,6 +61,7 @@ class InequalityToEquality(OptimizationProblemConverter):
 
         Args:
             problem: The problem to be solved, that may contain inequality constraints.
+
 
         Returns:
             The converted problem, that contain only equality constraints.
@@ -76,6 +80,7 @@ class InequalityToEquality(OptimizationProblemConverter):
             raise OptimizationError(f"Unsupported mode is selected: {mode}")
 
         # Copy variables
+        assert self._dst is not None
         for x in self._src.variables:
             if x.vartype == Variable.Type.BINARY:
                 self._dst._add_variable(
@@ -117,7 +122,12 @@ class InequalityToEquality(OptimizationProblemConverter):
         for lin_const in self._src.linear_constraints:
             if lin_const.sense == Constraint.Sense.EQ:
                 new_linear_constraints.append(
-                    (lin_const.linear.coefficients, lin_const.sense, lin_const.rhs, lin_const.name)
+                    (
+                        lin_const.linear.coefficients,
+                        lin_const.sense,
+                        lin_const.rhs,
+                        lin_const.name,
+                    )
                 )
             elif lin_const.sense in [Constraint.Sense.LE, Constraint.Sense.GE]:
                 new_linear_constraints.append(self._add_slack_var_linear_constraint(lin_const))
@@ -178,14 +188,16 @@ class InequalityToEquality(OptimizationProblemConverter):
         constant = self._src.objective.constant
         linear = self._src.objective.linear.to_dict(use_name=True)
         quadratic = self._src.objective.quadratic.to_dict(use_name=True)
+
         ho = {
-            degree: expr.to_dict(use_name=True)
+            degree: dict(expr.to_dict(use_name=True))  # Ensure it's a plain dict
             for degree, expr in self._src.objective.higher_order.items()
         }
+
         if self._src.objective.sense == OptimizationObjective.Sense.MINIMIZE:
-            self._dst.minimize(constant, linear, quadratic, ho)
+            self._dst.minimize(constant, linear, quadratic, ho)  # type: ignore
         else:
-            self._dst.maximize(constant, linear, quadratic, ho)
+            self._dst.maximize(constant, linear, quadratic, ho)  # type: ignore
 
         # Add linear constraints
         for lin_const_args in new_linear_constraints:
@@ -196,7 +208,7 @@ class InequalityToEquality(OptimizationProblemConverter):
             self._dst.quadratic_constraint(*quad_const_args)
 
         for ho_const_args in new_higher_order_constraints:
-            self._dst.higher_order_constraint(*ho_const_args)
+            self._dst.higher_order_constraint(*ho_const_args)  # type: ignore
 
         return self._dst
 
@@ -244,6 +256,7 @@ class InequalityToEquality(OptimizationProblemConverter):
             # Add a slack variable.
             mode_name = {"integer": "int", "continuous": "continuous"}
             slack_name = f"{name}{self._delimiter}{mode_name[mode]}_slack"
+            assert self._dst is not None
             if mode == "integer":
                 self._dst._add_variable(
                     name=slack_name,
@@ -309,6 +322,7 @@ class InequalityToEquality(OptimizationProblemConverter):
             # Add a slack variable.
             mode_name = {"integer": "int", "continuous": "continuous"}
             slack_name = f"{name}{self._delimiter}{mode_name[mode]}_slack"
+            assert self._dst is not None
             if mode == "integer":
                 self._dst._add_variable(
                     name=slack_name,
@@ -328,7 +342,7 @@ class InequalityToEquality(OptimizationProblemConverter):
             new_linear[slack_name] = sign
         return new_linear, quadratic.coefficients, "==", new_rhs, name
 
-    def _add_slack_var_higher_order_constraint(self, constraint: Constraint):
+    def _add_slack_var_higher_order_constraint(self, constraint: HigherOrderConstraint):
         higher_order = constraint.higher_order
         quadratic = constraint.quadratic
         linear = constraint.linear
@@ -383,6 +397,7 @@ class InequalityToEquality(OptimizationProblemConverter):
             # Add a slack variable.
             mode_name = {"integer": "int", "continuous": "continuous"}
             slack_name = f"{name}{self._delimiter}{mode_name[mode]}_slack"
+            assert self._dst is not None
             if mode == "integer":
                 self._dst._add_variable(
                     name=slack_name,
@@ -401,23 +416,27 @@ class InequalityToEquality(OptimizationProblemConverter):
                 )
             new_linear[slack_name] = sign
         higher_order = {
-            degree: expr.to_dict(use_name=True) for degree, expr in higher_order.items()
+            degree: expr.to_dict(use_name=True)  # type: ignore
+            for degree, expr in higher_order.items()  # type: ignore
         }
         return new_linear, quadratic.coefficients, higher_order, "==", new_rhs, name
 
-    def interpret(self, x: Union[np.ndarray, List[float]]) -> np.ndarray:
+    def interpret(self, x: np.ndarray | list[float]) -> np.ndarray:
         """Convert a result of a converted problem into that of the original problem.
 
         Args:
             x: The result of the converted problem or the given result in case of FAILURE.
 
+
         Returns:
             The result of the original problem.
         """
         # convert back the optimization result into that of the original problem
+        assert self._dst is not None
         names = [var.name for var in self._dst.variables]
 
         # interpret slack variables
+        assert self._src is not None
         sol = {name: x[i] for i, name in enumerate(names)}
         new_x = np.zeros(self._src.get_num_vars())
         for i, var in enumerate(self._src.variables):
@@ -427,10 +446,12 @@ class InequalityToEquality(OptimizationProblemConverter):
     @staticmethod
     def _any_float(values: np.ndarray) -> bool:
         """Check whether the list contains float or not.
+
         This method is used to check whether a constraint contain float coefficients or not.
 
         Args:
             values: Coefficients of the constraint
+
 
         Returns:
             bool: If the constraint contains float coefficients, this returns True, else False.
@@ -439,7 +460,7 @@ class InequalityToEquality(OptimizationProblemConverter):
 
     @property
     def mode(self) -> str:
-        """Returns the mode of the converter
+        """Returns the mode of the converter.
 
         Returns:
             The mode of the converter used for additional slack variables
@@ -448,7 +469,7 @@ class InequalityToEquality(OptimizationProblemConverter):
 
     @mode.setter
     def mode(self, mode: str) -> None:
-        """Set a new mode for the converter
+        """Set a new mode for the converter.
 
         Args:
             mode: The new mode for the converter

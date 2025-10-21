@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -15,7 +15,6 @@
 import unittest
 
 import numpy as np
-
 from qiskit_addon_opt_mapper import OptimizationError, OptimizationProblem
 from qiskit_addon_opt_mapper.converters import (
     EqualityToPenalty,
@@ -105,7 +104,14 @@ class TestEqualityToPenaltyConverter(OptimizationTestCase):
         self.assertEqual(qubo_auto.objective.linear.to_dict(), {0: -27, 1: -28, 2: -28})
         self.assertEqual(
             qubo_auto.objective.quadratic.to_dict(),
-            {(0, 0): 7.0, (0, 1): 16, (0, 2): 14.0, (1, 1): 7.0, (1, 2): 14.0, (2, 2): 7.0},
+            {
+                (0, 0): 7.0,
+                (0, 1): 16,
+                (0, 2): 14.0,
+                (1, 1): 7.0,
+                (1, 2): 14.0,
+                (2, 2): 7.0,
+            },
         )
         self.assertEqual(qubo_auto.objective.higher_order[3].to_dict(), {(0, 1, 2): 3})
 

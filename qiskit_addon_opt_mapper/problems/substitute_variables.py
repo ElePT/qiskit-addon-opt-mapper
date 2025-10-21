@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -15,7 +15,6 @@
 import logging
 from dataclasses import dataclass
 from math import isclose
-from typing import Dict, List, Optional, Tuple, Union
 
 from ..converters.util import (
     Monomial,
@@ -49,14 +48,14 @@ class SubstitutionExpression:
     """Constant value"""
     coeff: float = 0.0
     """Coefficient of the new variable"""
-    variable: Optional[str] = None
+    variable: str | None = None
     """Variable name or `None`"""
 
 
 def substitute_variables(
     optimization_problem: OptimizationProblem,
-    constants: Optional[Dict[Union[str, int], float]] = None,
-    variables: Optional[Dict[Union[str, int], Tuple[Union[str, int], float]]] = None,
+    constants: dict[str | int, float] | None = None,
+    variables: dict[str | int, tuple[str | int, float]] | None = None,
 ) -> OptimizationProblem:
     """Substitutes variables with constants or other variables.
 
@@ -108,7 +107,7 @@ def substitute_variables(
                 )
             if j_2 in subs:
                 raise OptimizationError(
-                    "Cannot substitute by variable that gets substituted itself: " f"{i} <- {j} {v}"
+                    f"Cannot substitute by variable that gets substituted itself: {i} <- {j} {v}"
                 )
             subs[i_2] = SubstitutionExpression(variable=j_2, coeff=v)
 
@@ -116,18 +115,17 @@ def substitute_variables(
 
 
 class _SubstituteVariables:
-    """A class to substitute variables of an optimization problem with constants for other
-    variables"""
+    """A class to substitute variables of an optimization problem with constants."""
 
     def __init__(self) -> None:
-        self._src: Optional[OptimizationProblem] = None
-        self._dst: Optional[OptimizationProblem] = None
-        self._subs: Dict[str, SubstitutionExpression] = {}
+        self._src: OptimizationProblem | None = None
+        self._dst: OptimizationProblem | None = None
+        self._subs: dict[str, SubstitutionExpression] = {}
 
     def substitute_variables(
         self,
         optimization_problem: OptimizationProblem,
-        subs: Dict[str, SubstitutionExpression],
+        subs: dict[str, SubstitutionExpression],
     ) -> OptimizationProblem:
         """Substitutes variables with constants or other variables.
 
@@ -137,6 +135,7 @@ class _SubstituteVariables:
             subs: substitution expressions as a dictionary.
                 e.g., {'x': SubstitutionExpression(const=1, coeff=2, variable='y'} means
                 `x` is substituted with `1 + 2 * y`.
+
 
         Returns:
             An optimization problem by substituting variables with constants or other variables.
@@ -160,22 +159,20 @@ class _SubstituteVariables:
 
     @staticmethod
     def _feasible(sense: ConstraintSense, rhs: float) -> bool:
-        """Checks feasibility of the following condition
-        0 `sense` rhs
-        """
+        """Checks feasibility of the following condition: 0 `sense` rhs."""
         if sense == ConstraintSense.EQ:
             if rhs == 0:
                 return True
         elif sense == ConstraintSense.LE:
             if rhs >= 0:
                 return True
-        elif sense == ConstraintSense.GE:
-            if rhs <= 0:
-                return True
+        elif sense == ConstraintSense.GE and rhs <= 0:
+            return True
         return False
 
     def _variables(self) -> bool:
         # copy variables that are not replaced
+        assert self._src is not None and self._dst is not None
         feasible = True
         for var in self._src.variables:
             name = var.name
@@ -206,7 +203,7 @@ class _SubstituteVariables:
                     new_ub_i = (ub_i - expr.const) / expr.coeff
                 else:
                     new_ub_i = ub_i if expr.coeff > 0 else -ub_i
-                var_j = self._dst.get_variable(expr.variable)
+                var_j = self._dst.get_variable(expr.variable)  # type: ignore
                 lb_j = var_j.lowerbound
                 ub_j = var_j.upperbound
                 if expr.coeff > 0:
@@ -242,13 +239,13 @@ class _SubstituteVariables:
         out: Poly = {}
         for m, coef in f.items():
             # For each variable in monomial, build options: const and/or variable term
-            factors: List[List[Tuple[Monomial, float]]] = []
+            factors: list[list[tuple[Monomial, float]]] = []
             zero_flag = False
             for name in m:
                 expr = self._subs.get(
                     name, SubstitutionExpression(const=0.0, coeff=1.0, variable=name)
                 )
-                opts: List[Tuple[Monomial, float]] = []
+                opts: list[tuple[Monomial, float]] = []
                 if expr.const != 0.0:
                     opts.append(((), expr.const))
                 if expr.variable is not None and expr.coeff != 0.0:
@@ -260,9 +257,9 @@ class _SubstituteVariables:
             if zero_flag:
                 continue
 
-            monoms: List[Tuple[Monomial, float]] = [((), 1.0)]
+            monoms: list[tuple[Monomial, float]] = [((), 1.0)]
             for opts in factors:
-                nxt: List[Tuple[Monomial, float]] = []
+                nxt: list[tuple[Monomial, float]] = []
                 for m0, c0 in monoms:
                     for m1, c1 in opts:
                         nxt.append((_norm(m0 + m1), c0 * c1))
@@ -274,6 +271,7 @@ class _SubstituteVariables:
         return _poly_split(out)
 
     def _objective(self) -> bool:
+        assert self._src is not None and self._dst is not None
         obj = self._src.objective
         const, lin, quad, higher = self._poly_apply_substitution(
             obj.linear, obj.quadratic, getattr(obj, "higher_order", {})
@@ -302,9 +300,10 @@ class _SubstituteVariables:
         return True
 
     def _linear_constraints(self) -> bool:
+        assert self._src is not None and self._dst is not None
         feasible = True
         for lin_cst in self._src.linear_constraints:
-            const, lin, quad, higher = self._poly_apply_substitution(
+            const, lin, _quad, _higher = self._poly_apply_substitution(
                 lin_cst.linear,
                 QuadraticExpression(optimization_problem=self._dst, coefficients={}),
                 {},
@@ -325,9 +324,10 @@ class _SubstituteVariables:
         return feasible
 
     def _quadratic_constraints(self) -> bool:
+        assert self._src is not None and self._dst is not None
         feasible = True
         for quad_cst in self._src.quadratic_constraints:
-            const, lin, quad, higher = self._poly_apply_substitution(
+            const, lin, quad, _higher = self._poly_apply_substitution(
                 quad_cst.linear, quad_cst.quadratic, {}
             )
             rhs = quad_cst.rhs - const
@@ -354,6 +354,7 @@ class _SubstituteVariables:
         return feasible
 
     def _higher_order_constraints(self) -> bool:
+        assert self._src is not None and self._dst is not None
         feasible = True
         for ho_cst in getattr(self._src, "higher_order_constraints", []):
             const, lin, quad, higher = self._poly_apply_substitution(

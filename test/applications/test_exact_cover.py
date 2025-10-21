@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -11,8 +11,8 @@
 # that they have been altered from the originals.
 
 """Test ExactCover class"""
-import numpy as np
 
+import numpy as np
 from qiskit_addon_opt_mapper import OptimizationProblem
 from qiskit_addon_opt_mapper.applications.exact_cover import ExactCover
 from qiskit_addon_opt_mapper.problems import Constraint, OptimizationObjective, VarType
@@ -50,9 +50,9 @@ class TestExactCover(OptimizationTestCase):
         self.assertDictEqual(obj.linear.to_dict(), {0: 1, 1: 1, 2: 1, 3: 1})
         self.assertEqual(obj.quadratic.to_dict(), {})
         # Test constraint
-        lins = op.linear_constraints
-        self.assertEqual(len(lins), len(self.total_set))
-        for i, lin in enumerate(lins):
+        lin_constraints = op.linear_constraints
+        self.assertEqual(len(lin_constraints), len(self.total_set))
+        for i, lin in enumerate(lin_constraints):
             self.assertEqual(lin.sense, Constraint.Sense.EQ)
             self.assertEqual(lin.rhs, 1)
             self.assertEqual(

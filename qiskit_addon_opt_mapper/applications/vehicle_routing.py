@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -14,12 +14,12 @@
 
 import itertools
 import random
-from typing import Dict, List, Optional, Union
 
 import networkx as nx
-import rustworkx as rx
 import numpy as np
+import rustworkx as rx
 from docplex.mp.model import Model
+from rustworkx import visualization as rx_visualization
 
 from qiskit_addon_opt_mapper.problems.optimization_problem import OptimizationProblem
 from qiskit_addon_opt_mapper.translators import from_docplex_mp
@@ -36,11 +36,12 @@ class VehicleRouting(GraphOptimizationApplication):
 
     def __init__(
         self,
-        graph: Union[nx.Graph, np.ndarray, List],
+        graph: nx.Graph | np.ndarray | list,
         num_vehicles: int = 2,
         depot: int = 0,
     ) -> None:
-        """
+        """Init method.
+
         Args:
             graph: A graph representing a problem. It can be specified directly as a
                 `NetworkX <https://networkx.org/>`_ graph,
@@ -53,8 +54,11 @@ class VehicleRouting(GraphOptimizationApplication):
         self._depot = depot
 
     def to_optimization_problem(self) -> OptimizationProblem:
-        """Convert a vehicle routing problem instance into a
+        """Represent as an optimization problem.
+
+        Convert a vehicle routing problem instance into a
         :class:`~qiskit_addon_opt_mapper.problems.OptimizationProblem`
+
 
         Returns:
             The :class:`~qiskit_addon_opt_mapper.problems.OptimizationProblem` created
@@ -105,11 +109,12 @@ class VehicleRouting(GraphOptimizationApplication):
         op = from_docplex_mp(mdl)
         return op
 
-    def interpret(self, result: np.ndarray) -> List[List[List[int]]]:
-        """Interpret a result as a list of the routes for each vehicle
+    def interpret(self, result: np.ndarray) -> list[list[list[int]]]:
+        """Interpret a result as a list of the routes for each vehicle.
 
         Args:
             result : The calculated result of the problem
+
 
         Returns:
             A list of the routes for each vehicle
@@ -124,7 +129,7 @@ class VehicleRouting(GraphOptimizationApplication):
                     if x[idx]:
                         edge_list.append([i, j])
                     idx += 1
-        route_list = []  # type: List[List[List[int]]]
+        route_list = []  # type: list[list[list[int]]]
         for k in range(self.num_vehicles):
             i = 0
             start = self.depot
@@ -149,9 +154,9 @@ class VehicleRouting(GraphOptimizationApplication):
     def _draw_result(
         self,
         result: np.ndarray,
-        pos: Optional[Dict[int, np.ndarray]] = None,
+        pos: dict[int, np.ndarray] | None = None,
     ) -> None:
-        """Draw the result with colors
+        """Draw the result with colors.
 
         Args:
             result: The calculated result for the problem
@@ -160,41 +165,28 @@ class VehicleRouting(GraphOptimizationApplication):
         import matplotlib as mpl
 
         route_list = self.interpret(result)
-        # nx.draw(self._graph, with_labels=True, pos=pos)
-        rx.visualization.mpl_draw(
+        rx_visualization.mpl_draw(
             self._graph,
             edge_list=self._edgelist(route_list),
             with_labels=True,
-            pos=pos,
+            pos=pos,  # type: ignore
             width=8,
             alpha=0.5,
             edge_color=self._edge_color(route_list),
             edge_cmap=mpl.colormaps["plasma"],
         )
 
-        # nx.draw_networkx_edges(
-        #     self._graph,
-        #     pos,
-        #     edgelist=self._edgelist(route_list),
-        #     width=8,
-        #     alpha=0.5,
-        #     edge_color=self._edge_color(route_list),
-        #     edge_cmap=mpl.colormaps["plasma"],
-        # )
-
-    def _edgelist(self, route_list: List[List[List[int]]]):
+    def _edgelist(self, route_list: list[list[list[int]]]):
         # Arrange route_list and return the list of the edges for the edge list of
-        # nx.draw_networkx_edges
         return [edge for k in range(len(route_list)) for edge in route_list[k]]
 
-    def _edge_color(self, route_list: List[List[List[int]]]):
+    def _edge_color(self, route_list: list[list[list[int]]]):
         # Arrange route_list and return the list of the colors of each route
-        # for edge_color of nx.draw_networkx_edges
-        return [k / len(route_list) for k in range(len(route_list)) for edge in route_list[k]]
+        return [k / len(route_list) for k in range(len(route_list)) for _ in route_list[k]]
 
     @property
     def num_vehicles(self) -> int:
-        """Getter of num_vehicles
+        """Getter of num_vehicles.
 
         Returns:
             The number of the vehicles
@@ -203,7 +195,7 @@ class VehicleRouting(GraphOptimizationApplication):
 
     @num_vehicles.setter
     def num_vehicles(self, num_vehicles: int) -> None:
-        """Setter of num_vehicles
+        """Setter of num_vehicles.
 
         Args:
             num_vehicles: The number of vehicle
@@ -212,7 +204,7 @@ class VehicleRouting(GraphOptimizationApplication):
 
     @property
     def depot(self) -> int:
-        """Getter of depot
+        """Getter of depot.
 
         Returns:
             The node index of the depot where all the vehicles depart
@@ -221,7 +213,7 @@ class VehicleRouting(GraphOptimizationApplication):
 
     @depot.setter
     def depot(self, depot: int) -> None:
-        """Setter of depot
+        """Setter of depot.
 
         Args:
             depot: The node index of the depot where all the vehicles depart
@@ -234,7 +226,7 @@ class VehicleRouting(GraphOptimizationApplication):
         n: int,
         low: int = 0,
         high: int = 100,
-        seed: Optional[int] = None,
+        seed: int | None = None,
         num_vehicle: int = 2,
         depot: int = 0,
     ) -> "VehicleRouting":
@@ -248,12 +240,13 @@ class VehicleRouting(GraphOptimizationApplication):
             num_vehicle: The number of the vehicles
             depot: The index of the depot node where all the vehicle depart
 
+
         Returns:
             A VehicleRouting instance created from the input information
         """
         random.seed(seed)
         pos = [(random.randint(low, high), random.randint(low, high)) for i in range(n)]
-        graph = rx.random_geometric_graph(n, np.hypot(high - low, high - low) + 1, pos=pos)
+        graph = rx.random_geometric_graph(n, np.hypot(high - low, high - low) + 1, pos=pos)  # type: ignore
         threshold = np.hypot(high - low, high - low) + 1
         for i in range(n):
             for j in range(i + 1, n):

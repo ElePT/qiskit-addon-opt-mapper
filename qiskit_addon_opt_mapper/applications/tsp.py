@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -11,11 +11,11 @@
 # that they have been altered from the originals.
 
 """An application class for Traveling salesman problem (TSP)."""
-from typing import Dict, List, Optional, Union
 
-import rustworkx as rx
 import numpy as np
+import rustworkx as rx
 from docplex.mp.model import Model
+from rustworkx import visualization as rx_visualization
 
 from qiskit_addon_opt_mapper.exceptions import OptimizationError
 from qiskit_addon_opt_mapper.problems import OptimizationProblem
@@ -34,8 +34,11 @@ class Tsp(GraphOptimizationApplication):
     """
 
     def to_optimization_problem(self) -> OptimizationProblem:
-        """Convert a traveling salesman problem instance into a
+        """Represent as an optimization problem.
+
+        Convert a traveling salesman problem instance into a
         :class:`~qiskit_addon_opt_mapper.problems.OptimizationProblem`
+
 
         Returns:
             The :class:`~qiskit_addon_opt_mapper.problems.OptimizationProblem` created
@@ -82,18 +85,19 @@ class Tsp(GraphOptimizationApplication):
         op = from_docplex_mp(mdl)
         return op
 
-    def interpret(self, result: np.ndarray) -> List[Union[int, List[int]]]:
-        """Interpret a result as a list of node indices
+    def interpret(self, result: np.ndarray) -> list[int | list[int]]:
+        """Interpret a result as a list of node indices.
 
         Args:
             result : The calculated result of the problem
+
 
         Returns:
             A list of nodes whose indices correspond to its order in a prospective cycle.
         """
         x = self._result_to_x(result)
         n = self._graph.num_nodes()
-        route = []  # type: List[Union[int, List[int]]]
+        route = []  # type: list[int | list[int]]
         for p__ in range(n):
             p_step = []
             for i in range(n):
@@ -108,32 +112,24 @@ class Tsp(GraphOptimizationApplication):
     def _draw_result(
         self,
         result: np.ndarray,
-        pos: Optional[Dict[int, np.ndarray]] = None,
+        pos: dict[int, np.ndarray] | None = None,
     ) -> None:
-        """Draw the result with colors
+        """Draw the result with colors.
 
         Args:
             result : The calculated result for the problem
             pos: The positions of nodes
         """
         x = self._result_to_x(result)
-        rx.visualization.mpl_draw(
+        rx_visualization.mpl_draw(
             self._graph,
             edge_list=self._edgelist(x),
             with_labels=True,
-            pos=pos,
+            pos=pos,  # type: ignore
             width=8,
             alpha=0.5,
             edge_color="tab:red",
         )
-        # nx.draw_networkx_edges(
-        #     self._graph,
-        #     pos,
-        #     edgelist=self._edgelist(x),
-        #     width=8,
-        #     alpha=0.5,
-        #     edge_color="tab:red",
-        # )
 
     def _edgelist(self, x: np.ndarray):
         # Arrange route and return the list of the edges for the edge list of nx.draw_networkx_edges
@@ -142,14 +138,17 @@ class Tsp(GraphOptimizationApplication):
 
     @staticmethod
     # pylint: disable=undefined-variable
-    def create_random_instance(n: int, low: int = 0, high: int = 100, seed: int = None) -> "Tsp":
-        """Create a random instance of the traveling salesman problem
+    def create_random_instance(
+        n: int, low: int = 0, high: int = 100, seed: int | None = None
+    ) -> "Tsp":
+        """Create a random instance of the traveling salesman problem.
 
         Args:
             n: the number of nodes.
             low: The minimum value for the coordinate of a node.
             high: The maximum value for the coordinate of a node.
             seed: the seed for the random coordinates.
+
 
         Returns:
              A Tsp instance created from the input information
@@ -186,6 +185,7 @@ class Tsp(GraphOptimizationApplication):
         Raises:
             OptimizationError: If the type is not "TSP"
             OptimizationError: If the edge weight type is not "EUC_2D"
+
 
         Returns:
             A Tsp instance data.
@@ -253,11 +253,13 @@ class Tsp(GraphOptimizationApplication):
         return Tsp(graph)
 
     @staticmethod
-    def tsp_value(z: List[int], adj_matrix: np.ndarray) -> float:
+    def tsp_value(z: list[int], adj_matrix: np.ndarray) -> float:
         """Compute the TSP value of a solution.
+
         Args:
             z: list of cities.
             adj_matrix: adjacency matrix.
+
 
         Returns:
             value of the total length
@@ -266,4 +268,4 @@ class Tsp(GraphOptimizationApplication):
         for i in range(len(z) - 1):
             ret += adj_matrix[z[i], z[i + 1]]
         ret += adj_matrix[z[-1], z[0]]
-        return ret
+        return float(ret)

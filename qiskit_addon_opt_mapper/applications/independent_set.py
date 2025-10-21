@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -12,11 +12,9 @@
 
 """An application class for the independent set."""
 
-from typing import Dict, List, Optional
-
-import rustworkx as rx
 import numpy as np
 from docplex.mp.model import Model
+from rustworkx import visualization as rx_visualization
 
 from qiskit_addon_opt_mapper.problems.optimization_problem import OptimizationProblem
 from qiskit_addon_opt_mapper.translators import from_docplex_mp
@@ -34,8 +32,11 @@ class IndependentSet(GraphOptimizationApplication):
     """
 
     def to_optimization_problem(self) -> OptimizationProblem:
-        """Convert a independent set instance into a
+        """Represent as an optimization problem.
+
+        Convert a independent set instance into a
         :class:`~qiskit_addon_opt_mapper.problems.OptimizationProblem`
+
 
         Returns:
             The :class:`~qiskit_addon_opt_mapper.problems.OptimizationProblem` created
@@ -51,11 +52,12 @@ class IndependentSet(GraphOptimizationApplication):
         op = from_docplex_mp(mdl)
         return op
 
-    def interpret(self, result: np.ndarray) -> List[int]:
-        """Interpret a result as a list of node indices
+    def interpret(self, result: np.ndarray) -> list[int]:
+        """Interpret a result as a list of node indices.
 
         Args:
             result : The calculated result of the problem
+
 
         Returns:
             A list of node indices whose corresponding variable is 1
@@ -70,17 +72,20 @@ class IndependentSet(GraphOptimizationApplication):
     def _draw_result(
         self,
         result: np.ndarray,
-        pos: Optional[Dict[int, np.ndarray]] = None,
+        pos: dict[int, np.ndarray] | None = None,
     ) -> None:
-        """Draw the result with colors
+        """Draw the result with colors.
 
         Args:
             result : The calculated result for the problem
             pos: The positions of nodes
         """
         x = self._result_to_x(result)
-        rx.visualization.mpl_draw(
-            self._graph, node_color=self._node_colors(x), pos=pos, with_labels=True
+        rx_visualization.mpl_draw(
+            self._graph,
+            node_color=self._node_colors(x),
+            pos=pos,  # type: ignore
+            with_labels=True,
         )
 
     def _node_colors(self, x: np.ndarray):

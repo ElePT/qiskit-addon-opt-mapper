@@ -1,6 +1,6 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
-# (C) Copyright IBM 205.
+# (C) Copyright IBM 2025.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,14 +10,16 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Translator between a gurobipy model and an optimization problem"""
+"""Translator between a gurobipy model and an optimization problem."""
 
 from typing import cast
 
 import qiskit_addon_opt_mapper.optionals as _optionals
 from qiskit_addon_opt_mapper.exceptions import OptimizationError
 from qiskit_addon_opt_mapper.problems.constraint import Constraint
-from qiskit_addon_opt_mapper.problems.optimization_objective import OptimizationObjective
+from qiskit_addon_opt_mapper.problems.optimization_objective import (
+    OptimizationObjective,
+)
 from qiskit_addon_opt_mapper.problems.optimization_problem import OptimizationProblem
 from qiskit_addon_opt_mapper.problems.variable import Variable
 
@@ -27,21 +29,24 @@ if _optionals.HAS_GUROBIPY:
 else:
 
     class Model:  # type: ignore
-        """Empty Model class
+        """Empty Model class.
+
         Replacement if gurobipy.Model is not present.
         """
 
         pass
 
     class LinExpr:  # type: ignore
-        """Empty LinExpr class
+        """Empty LinExpr class.
+
         Replacement if gurobipy.LinExpr is not present.
         """
 
         pass
 
     class QuadExpr:  # type: ignore
-        """Empty QuadExpr class
+        """Empty QuadExpr class.
+
         Replacement if gurobipy.QuadExpr is not present.
         """
 
@@ -96,7 +101,7 @@ def to_gurobipy(optimization_problem: OptimizationProblem) -> Model:
         mdl.setObjective(objective, sense=gp.GRB.MAXIMIZE)
 
     # add linear constraints
-    for i, l_constraint in enumerate(optimization_problem.linear_constraints):
+    for l_constraint in optimization_problem.linear_constraints:
         name = l_constraint.name
         rhs = l_constraint.rhs
         if rhs == 0 and l_constraint.linear.coefficients.nnz == 0:
@@ -116,7 +121,7 @@ def to_gurobipy(optimization_problem: OptimizationProblem) -> Model:
             raise OptimizationError(f"Unsupported constraint sense: {sense}")
 
     # add quadratic constraints
-    for i, q_constraint in enumerate(optimization_problem.quadratic_constraints):
+    for q_constraint in optimization_problem.quadratic_constraints:
         name = q_constraint.name
         rhs = q_constraint.rhs
         if (

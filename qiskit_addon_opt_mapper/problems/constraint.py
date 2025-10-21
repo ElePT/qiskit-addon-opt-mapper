@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -12,9 +12,11 @@
 
 """Abstract Constraint."""
 
+from __future__ import annotations
+
 from abc import abstractmethod
 from enum import Enum
-from typing import Any, Dict, List, Union
+from typing import Any
 
 from numpy import ndarray
 
@@ -31,11 +33,12 @@ class ConstraintSense(Enum):
     EQ = 2
 
     @staticmethod
-    def convert(sense: Union[str, "ConstraintSense"]) -> "ConstraintSense":
-        """Convert a string into a corresponding sense of constraints
+    def convert(sense: str | ConstraintSense) -> ConstraintSense:
+        """Convert a string into a corresponding sense of constraints.
 
         Args:
             sense: A string or sense of constraints
+
 
         Returns:
             The sense of constraints
@@ -63,24 +66,22 @@ class ConstraintSense(Enum):
             raise OptimizationError(f"Invalid sense: {sense}")
         if sense in ["E", "EQ", "=", "=="]:
             return ConstraintSense.EQ
-        elif sense in ["L", "LE", "<=", "<"]:
+        if sense in ["L", "LE", "<=", "<"]:
             return ConstraintSense.LE
-        else:
-            return ConstraintSense.GE
+        return ConstraintSense.GE
 
     @property
     def label(self) -> str:
-        """Label of the constraint sense
+        """Label of the constraint sense.
 
         Returns:
             The label of the constraint sense ('<=', '>=', or '==')
         """
         if self is ConstraintSense.LE:
             return "<="
-        elif self is ConstraintSense.GE:
+        if self is ConstraintSense.GE:
             return ">="
-        else:
-            return "=="
+        return "=="
 
 
 class Constraint(OptimizationProblemElement):
@@ -150,11 +151,12 @@ class Constraint(OptimizationProblemElement):
         self._rhs = rhs
 
     @abstractmethod
-    def evaluate(self, x: Union[ndarray, List, Dict[Union[int, str], float]]) -> float:
+    def evaluate(self, x: ndarray | list | dict[str | int, float]) -> float:
         """Evaluate left-hand-side of constraint for given values of variables.
 
         Args:
             x: The values to be used for the variables.
+
 
         Returns:
             The left-hand-side of the constraint.

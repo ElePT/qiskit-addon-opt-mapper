@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -9,20 +9,21 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
-"""
+
+"""Optimization Add-on module for Qiskit.
+
 ===========================================================
 Optimization Add-on module (:mod:`qiskit_addon_opt_mapper`)
 ===========================================================
 """
-
 
 from .exceptions import AlgorithmError, OptimizationError
 from .infinity import INFINITY
 from .problems.optimization_problem import OptimizationProblem
 
 __all__ = [
-    "OptimizationProblem",
     "INFINITY",
-    "OptimizationError",
     "AlgorithmError",
+    "OptimizationError",
+    "OptimizationProblem",
 ]

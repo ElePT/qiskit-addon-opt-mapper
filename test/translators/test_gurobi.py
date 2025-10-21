@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -15,12 +15,13 @@
 import unittest
 from os import path
 from tempfile import TemporaryDirectory
-from test.optimization_test_case import OptimizationTestCase
 
 import qiskit_addon_opt_mapper.optionals as _optionals
 from qiskit_addon_opt_mapper.exceptions import OptimizationError
 from qiskit_addon_opt_mapper.problems import Constraint, OptimizationProblem
 from qiskit_addon_opt_mapper.translators.gurobipy import from_gurobipy, to_gurobipy
+
+from ..optimization_test_case import OptimizationTestCase
 
 
 class TestGurobiTranslator(OptimizationTestCase):
@@ -33,7 +34,11 @@ class TestGurobiTranslator(OptimizationTestCase):
         q_p.binary_var(name="x")
         q_p.integer_var(name="y", lowerbound=-2, upperbound=4)
         q_p.continuous_var(name="z", lowerbound=-1.5, upperbound=3.2)
-        q_p.minimize(constant=1, linear={"x": 1, "y": 2}, quadratic={("x", "y"): -1, ("z", "z"): 2})
+        q_p.minimize(
+            constant=1,
+            linear={"x": 1, "y": 2},
+            quadratic={("x", "y"): -1, ("z", "z"): 2},
+        )
         q_p.linear_constraint({"x": 2, "z": -1}, "==", 1)
         q_p.quadratic_constraint({"x": 2, "z": -1}, {("y", "z"): 3}, "==", 1)
         q_p2 = from_gurobipy(to_gurobipy(q_p))

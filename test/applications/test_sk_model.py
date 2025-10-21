@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -11,9 +11,9 @@
 # that they have been altered from the originals.
 
 """Test SK model class"""
+
 import networkx as nx
 import numpy as np
-
 from qiskit_addon_opt_mapper import OptimizationProblem
 from qiskit_addon_opt_mapper.applications.sk_model import SKModel
 from qiskit_addon_opt_mapper.problems import OptimizationObjective, VarType

@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -12,13 +12,13 @@
 
 """An abstract class for graph optimization application classes."""
 
-from abc import abstractmethod
 import copy
-from typing import Dict, List, Optional, Union
+from abc import abstractmethod
 
 import networkx as nx
-import rustworkx as rx
 import numpy as np
+import rustworkx as rx
+from rustworkx import visualization as rx_visualization
 
 import qiskit_addon_opt_mapper.optionals as _optionals
 
@@ -26,12 +26,11 @@ from .optimization_application import OptimizationApplication
 
 
 class GraphOptimizationApplication(OptimizationApplication):
-    """
-    An abstract class for graph optimization applications.
-    """
+    """An abstract class for graph optimization applications."""
 
-    def __init__(self, graph: Union[nx.Graph, np.ndarray, List, rx.PyGraph]) -> None:
-        """
+    def __init__(self, graph: nx.Graph | np.ndarray | list | rx.PyGraph) -> None:
+        """Init method.
+
         Args:
             graph: A graph representing a problem. It can be specified in the following
                 formats:
@@ -45,7 +44,7 @@ class GraphOptimizationApplication(OptimizationApplication):
             self._graph = copy.deepcopy(graph)
         elif isinstance(graph, nx.Graph):
             self._graph = self._from_networkx(graph)
-        elif isinstance(graph, (np.ndarray, list)):
+        elif isinstance(graph, np.ndarray | list):
             nx_graph = nx.Graph(graph)
             self._graph = self._from_networkx(nx_graph)
         else:
@@ -63,10 +62,12 @@ class GraphOptimizationApplication(OptimizationApplication):
     @_optionals.HAS_MATPLOTLIB.require_in_call
     def draw(
         self,
-        result: np.ndarray = None,
-        pos: Optional[Dict[int, np.ndarray]] = None,
+        result: np.ndarray | None = None,
+        pos: dict[int, np.ndarray] | None = None,
     ) -> None:
-        """Draw a graph with the result. When the result is None, draw an original graph without
+        """Draw a graph with the result.
+
+        When the result is None, draw an original graph without
         colors.
 
         Args:
@@ -74,7 +75,7 @@ class GraphOptimizationApplication(OptimizationApplication):
             pos: The positions of nodes
         """
         if result is None:
-            rx.visualization.mpl_draw(self._graph, pos=pos, with_labels=True)
+            rx_visualization.mpl_draw(self._graph, pos=pos, with_labels=True)  # type: ignore
         else:
             self._draw_result(result, pos)
 
@@ -82,9 +83,9 @@ class GraphOptimizationApplication(OptimizationApplication):
     def _draw_result(
         self,
         result: np.ndarray,
-        pos: Optional[Dict[int, np.ndarray]] = None,
+        pos: dict[int, np.ndarray] | None = None,
     ) -> None:
-        """Draw the result with colors
+        """Draw the result with colors.
 
         Args:
             result : The calculated result for the problem
@@ -94,7 +95,7 @@ class GraphOptimizationApplication(OptimizationApplication):
 
     @property
     def graph(self) -> rx.PyGraph:
-        """Getter of the graph
+        """Getter of the graph.
 
         Returns:
             A graph for a problem
@@ -103,7 +104,7 @@ class GraphOptimizationApplication(OptimizationApplication):
 
     @property
     def nx_graph(self) -> nx.Graph:
-        """Getter of the graph in Networkx format
+        """Getter of the graph in Networkx format.
 
         Returns:
             A graph for a problem

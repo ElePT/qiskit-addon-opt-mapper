@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -614,7 +614,8 @@ class TestExpr2Str(OptimizationTestCase):
         q_p.binary_var_list(3, name="long_name")
         q_p.linear_constraint({0: 1, 1: 2, 2: 3}, "==", 0)
         self.assertEqual(
-            expr2str(linear=q_p.get_linear_constraint(0).linear, truncate=10), "long_name0..."
+            expr2str(linear=q_p.get_linear_constraint(0).linear, truncate=10),
+            "long_name0...",
         )
         self.assertEqual(
             expr2str(linear=q_p.get_linear_constraint(0).linear, truncate=20),
@@ -633,16 +634,20 @@ class TestExpr2Str(OptimizationTestCase):
         q_p.binary_var_list(3, name="x")
         q_p.linear_constraint({0: 1, 1: 2, 2: 3}, "==", 0)
         self.assertEqual(
-            expr2str(linear=q_p.get_linear_constraint(0).linear, wrap=0), "x0 + 2*x1 + 3*x2"
+            expr2str(linear=q_p.get_linear_constraint(0).linear, wrap=0),
+            "x0 + 2*x1 + 3*x2",
         )
         self.assertEqual(
-            expr2str(linear=q_p.get_linear_constraint(0).linear, wrap=80), "x0 + 2*x1 + 3*x2"
+            expr2str(linear=q_p.get_linear_constraint(0).linear, wrap=80),
+            "x0 + 2*x1 + 3*x2",
         )
         self.assertEqual(
-            expr2str(linear=q_p.get_linear_constraint(0).linear, wrap=8), "x0\n+ 2*x1\n+ 3*x2"
+            expr2str(linear=q_p.get_linear_constraint(0).linear, wrap=8),
+            "x0\n+ 2*x1\n+ 3*x2",
         )
         self.assertEqual(
-            expr2str(linear=q_p.get_linear_constraint(0).linear, wrap=9), "x0 + 2*x1\n+ 3*x2"
+            expr2str(linear=q_p.get_linear_constraint(0).linear, wrap=9),
+            "x0 + 2*x1\n+ 3*x2",
         )
         self.assertEqual(
             expr2str(linear=q_p.get_linear_constraint(0).linear, wrap=5, indent=2),

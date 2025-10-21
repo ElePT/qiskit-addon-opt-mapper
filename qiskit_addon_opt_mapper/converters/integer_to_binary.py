@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -13,7 +13,6 @@
 """The converter to map integer variables in a optimization problem to binary variables."""
 
 import copy
-from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 
@@ -25,8 +24,10 @@ from .optimization_problem_converter import OptimizationProblemConverter
 
 
 class IntegerToBinary(OptimizationProblemConverter):
-    """Convert a :class:`~qiskit_addon_opt_mapper.problems.OptimizationProblem` into new one by encoding
-    integer with binary variables.
+    """Integer to binary converter.
+
+    Convert a :class:`~qiskit_addon_opt_mapper.problems.OptimizationProblem`
+    into new one by encoding integers with binary variables.
 
     This bounded-coefficient encoding used in this converted is proposed in [1], Eq. (5).
 
@@ -46,9 +47,10 @@ class IntegerToBinary(OptimizationProblemConverter):
     _delimiter = "@"  # users are supposed not to use this character in variable names
 
     def __init__(self) -> None:
-        self._src: Optional[OptimizationProblem] = None
-        self._dst: Optional[OptimizationProblem] = None
-        self._conv: Dict[Variable, List[Tuple[str, int]]] = {}
+        """Class initializer."""
+        self._src: OptimizationProblem | None = None
+        self._dst: OptimizationProblem | None = None
+        self._conv: dict[Variable, list[tuple[str, int]]] = {}
         # e.g., self._conv = {x: [('x@1', 1), ('x@2', 2)]}
 
     def convert(self, problem: OptimizationProblem) -> OptimizationProblem:
@@ -57,18 +59,17 @@ class IntegerToBinary(OptimizationProblemConverter):
         Args:
             problem: The problem to be solved, that may contain integer variables.
 
+
         Returns:
             The converted problem, that contains no integer variables.
 
         Raises:
             OptimizationError: if variable or constraint type is not supported.
         """
-
         # Copy original QP as reference.
         self._src = copy.deepcopy(problem)
 
         if self._src.get_num_integer_vars() > 0:
-
             # Initialize new QP
             self._dst = OptimizationProblem(name=problem.name)
 
@@ -123,7 +124,7 @@ class IntegerToBinary(OptimizationProblemConverter):
 
     def _convert_var(
         self, name: str, lowerbound: float, upperbound: float
-    ) -> List[Tuple[str, int]]:
+    ) -> list[tuple[str, int]]:
         var_range = upperbound - lowerbound
         power = int(np.log2(var_range)) if var_range > 0 else 0
         bounded_coef = var_range - (2**power - 1)
@@ -132,10 +133,11 @@ class IntegerToBinary(OptimizationProblemConverter):
         return [(name + self._delimiter + str(i), coef) for i, coef in enumerate(coeffs)]
 
     def _convert_linear_coefficients_dict(
-        self, coefficients: Dict[str, float]
-    ) -> Tuple[Dict[str, float], float]:
+        self, coefficients: dict[str, float]
+    ) -> tuple[dict[str, float], float]:
+        assert self._src is not None
         constant = 0.0
-        linear: Dict[str, float] = {}
+        linear: dict[str, float] = {}
         for name, v in coefficients.items():
             x = self._src.get_variable(name)
             if x in self._conv:
@@ -148,10 +150,11 @@ class IntegerToBinary(OptimizationProblemConverter):
         return linear, constant
 
     def _convert_quadratic_coefficients_dict(
-        self, coefficients: Dict[Tuple[str, str], float]
-    ) -> Tuple[Dict[Tuple[str, str], float], Dict[str, float], float]:
+        self, coefficients: dict[tuple[str, str], float]
+    ) -> tuple[dict[tuple[str, str], float], dict[str, float], float]:
+        assert self._src is not None
         constant = 0.0
-        linear: Dict[str, float] = {}
+        linear: dict[str, float] = {}
         quadratic = {}
         for (name_i, name_j), v in coefficients.items():
             x = self._src.get_variable(name_i)
@@ -185,10 +188,9 @@ class IntegerToBinary(OptimizationProblemConverter):
         return quadratic, linear, constant
 
     def _convert_higher_order_coefficients_dict(
-        self, coefficients: Dict[int, Dict[Tuple[str, ...], float]]
-    ) -> Tuple[Dict[int, Dict[Tuple[str, ...], float]], Dict[str, float], float]:
-        """
-        Expand higher-order terms containing integer variables into binary/constant/linear terms.
+        self, coefficients: dict[int, dict[tuple[str, ...], float]]
+    ) -> tuple[dict[int, dict[tuple[str, ...], float]], dict[str, float], float]:
+        """Expand higher-order terms containing integer variables into binary/constant/linear terms.
 
         Each integer variable x is represented as:
             x = lowerbound_x + sum_i coeff_i * z_i
@@ -196,27 +198,27 @@ class IntegerToBinary(OptimizationProblemConverter):
 
         We expand the polynomial by convolution across all variables in 'names'.
         """
-
+        assert self._src is not None
         constant = 0.0
-        linear: Dict[str, float] = {}
-        higher_order: Dict[int, Dict[Tuple[str, ...], float]] = {}
+        linear: dict[str, float] = {}
+        higher_order: dict[int, dict[tuple[str, ...], float]] = {}
 
-        def add_to_degree(d: int, key: Tuple[str, ...], val: float):
+        def add_to_degree(d: int, key: tuple[str, ...], val: float):
             """Helper: add coefficient 'val' to the monomial 'key' at degree 'd'."""
             if d not in higher_order:
                 higher_order[d] = {}
             higher_order[d][key] = higher_order[d].get(key, 0.0) + val
 
         for _degree, terms in coefficients.items():
-            for names, v in terms.to_dict(use_name=True).items():
+            for names, v in terms.to_dict(use_name=True).items():  # type: ignore
                 # Build candidate monomials for each variable in 'names'
                 # Each entry is a list of (vars_tuple, coeff)
-                factor_options: List[List[Tuple[Tuple[str, ...], float]]] = []
+                factor_options: list[list[tuple[tuple[str, ...], float]]] = []
                 for name in names:
                     var = self._src.get_variable(name)
                     if var in self._conv:
                         # Integer variable: represented as (lb) + sum(coeff * z)
-                        opts: List[Tuple[Tuple[str, ...], float]] = []
+                        opts: list[tuple[tuple[str, ...], float]] = []
                         if var.lowerbound != 0:
                             opts.append(((), float(var.lowerbound)))  # constant shift
                         for z_name, coeff in self._conv[var]:
@@ -227,9 +229,9 @@ class IntegerToBinary(OptimizationProblemConverter):
                         factor_options.append([((var.name,), 1.0)])
 
                 # Convolution: combine all options across factors
-                monomials: List[Tuple[Tuple[str, ...], float]] = [((), 1.0)]
+                monomials: list[tuple[tuple[str, ...], float]] = [((), 1.0)]
                 for opts in factor_options:
-                    next_monomials: List[Tuple[Tuple[str, ...], float]] = []
+                    next_monomials: list[tuple[tuple[str, ...], float]] = []
                     for vars_so_far, coef_so_far in monomials:
                         for vars_new, coef_new in opts:
                             next_monomials.append((vars_so_far + vars_new, coef_so_far * coef_new))
@@ -250,7 +252,6 @@ class IntegerToBinary(OptimizationProblemConverter):
         return higher_order, linear, constant
 
     def _substitute_int_var(self):
-
         # set objective
         linear, linear_constant = self._convert_linear_coefficients_dict(
             self._src.objective.linear.to_dict(use_name=True)
@@ -355,17 +356,18 @@ class IntegerToBinary(OptimizationProblemConverter):
                 constraint.name,
             )
 
-    def interpret(self, x: Union[np.ndarray, List[float]]) -> np.ndarray:
-        """Convert back the converted problem (binary variables)
-        to the original (integer variables).
+    def interpret(self, x: np.ndarray | list[float]) -> np.ndarray:
+        """Convert back the converted problem (binary variables) to the original (integer variables).
 
         Args:
             x: The result of the converted problem or the given result in case of FAILURE.
+
 
         Returns:
             The result of the original problem.
         """
         # interpret integer values
+        assert self._dst is not None and self._src is not None
         sol = {var.name: x[i] for i, var in enumerate(self._dst.variables)}
         new_x = np.zeros(self._src.get_num_vars())
         for i, var in enumerate(self._src.variables):

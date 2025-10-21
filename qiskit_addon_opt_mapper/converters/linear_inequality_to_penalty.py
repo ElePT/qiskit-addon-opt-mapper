@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -10,11 +10,12 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Converter to convert a problem with inequality constraints to unconstrained with penalty
-terms."""
+"""Converter.
+
+Convert a problem with inequality constraints to unconstrained with penalty terms.
+"""
 
 import logging
-from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 
@@ -59,17 +60,17 @@ class LinearInequalityToPenalty(OptimizationProblemConverter):
 
     """
 
-    def __init__(self, penalty: Optional[float] = None) -> None:
-        """
+    def __init__(self, penalty: float | None = None) -> None:
+        """Init method.
+
         Args:
             penalty: Penalty factor to scale equality constraints that are added to objective.
                      If None is passed, a penalty factor will be automatically calculated on
                      every conversion.
         """
-
-        self._src_num_vars: Optional[int] = None
-        self._dst: Optional[OptimizationProblem] = None
-        self._penalty: Optional[float] = penalty
+        self._src_num_vars: int | None = None
+        self._dst: OptimizationProblem | None = None
+        self._penalty: float | None = penalty
         self._should_define_penalty: bool = penalty is None
 
     def convert(self, problem: OptimizationProblem) -> OptimizationProblem:
@@ -92,13 +93,13 @@ class LinearInequalityToPenalty(OptimizationProblemConverter):
         Args:
             problem: The problem to be solved.
 
+
         Returns:
             The converted problem
 
         Raises:
             OptimizationError: If an unsupported-type variable exists.
         """
-
         # create empty OptimizationProblem model
         self._src_num_vars = problem.get_num_vars()
         self._dst = OptimizationProblem(name=problem.name)
@@ -107,7 +108,7 @@ class LinearInequalityToPenalty(OptimizationProblemConverter):
         if self._should_define_penalty:
             penalty = self._auto_define_penalty(problem)
         else:
-            penalty = self._penalty
+            penalty = self._penalty  # type: ignore
 
         # Set variables
         for x in problem.variables:
@@ -155,7 +156,6 @@ class LinearInequalityToPenalty(OptimizationProblemConverter):
 
         # convert linear constraints into penalty terms
         for constraint in problem.linear_constraints:
-
             # special constraint check function here
             if not self._is_matched_constraint(problem, constraint):
                 self._dst.linear_constraint(
@@ -206,16 +206,16 @@ class LinearInequalityToPenalty(OptimizationProblemConverter):
             self._dst.higher_order_constraint(
                 ho_constraint.linear.coefficients,
                 ho_constraint.quadratic.coefficients,
-                {degree: expr.to_dict() for degree, expr in ho_constraint.higher_order.items()},
+                {degree: expr.to_dict() for degree, expr in ho_constraint.higher_order.items()},  # type: ignore
                 ho_constraint.sense,
                 ho_constraint.rhs,
                 ho_constraint.name,
             )
 
-        if problem.objective.sense == OptimizationObjective.Sense.MINIMIZE:
-            self._dst.minimize(offset, linear, quadratic, ho)
+        if problem.objective.sense == OptimizationObjective.Sense.MINIMIZE:  # type: ignore
+            self._dst.minimize(offset, linear, quadratic, ho)  # type: ignore
         else:
-            self._dst.maximize(offset, linear, quadratic, ho)
+            self._dst.maximize(offset, linear, quadratic, ho)  # type: ignore
 
         # Update the penalty to the one just used
         self._penalty = penalty
@@ -225,7 +225,7 @@ class LinearInequalityToPenalty(OptimizationProblemConverter):
     @staticmethod
     def _conversion_table(
         constraint,
-    ) -> Tuple[int, np.ndarray, np.ndarray, Dict[int, int]]:
+    ) -> tuple[int, np.ndarray, np.ndarray, dict[int, int]]:
         """Construct conversion matrix for special constraint.
 
         Returns:
@@ -235,7 +235,6 @@ class LinearInequalityToPenalty(OptimizationProblemConverter):
         Raises:
             OptimizationError: if the constraint is invalid.
         """
-
         vars_dict = constraint.linear.to_dict()
         coeffs = list(vars_dict.values())
         varmap = dict(enumerate(vars_dict.keys()))
@@ -290,7 +289,6 @@ class LinearInequalityToPenalty(OptimizationProblemConverter):
             True: when constraint is special
             False: when constraint is not special
         """
-
         params = constraint.linear.to_dict()
         num_vars = len(params)
         rhs = constraint.rhs
@@ -298,23 +296,25 @@ class LinearInequalityToPenalty(OptimizationProblemConverter):
         coeff_array = np.array(list(params.values()))
 
         # Binary parameter?
-        if any(problem.variables[i].vartype != Variable.Type.BINARY for i in params.keys()):
+        if any(problem.variables[i].vartype != Variable.Type.BINARY for i in params):
             return False
 
         if num_vars == 2 and rhs == 0:
             if sense in (Constraint.Sense.LE, Constraint.Sense.GE):
                 # x-y<=0
                 # x-y>=0
-                return coeff_array.min() == -1.0 and coeff_array.max() == 1.0
+                return bool(coeff_array.min() == -1.0 and coeff_array.max() == 1.0)
         elif num_vars >= 2:
-            if sense == Constraint.Sense.LE and rhs == 1:
-                if all(i == 1 for i in params.values()):
-                    # x1+x2+...<=1
-                    return True
-            elif sense == Constraint.Sense.GE and rhs == num_vars - 1:
-                if all(i == 1 for i in params.values()):
-                    # x1+x2+...>=n-1
-                    return True
+            if sense == Constraint.Sense.LE and rhs == 1 and all(i == 1 for i in params.values()):
+                # x1+x2+...<=1
+                return True
+            if (
+                sense == Constraint.Sense.GE
+                and rhs == num_vars - 1
+                and all(i == 1 for i in params.values())
+            ):
+                # x1+x2+...>=n-1
+                return True
 
         return False
 
@@ -328,7 +328,6 @@ class LinearInequalityToPenalty(OptimizationProblemConverter):
             If a constraint has a float coefficient,
             return the default value for the penalty factor.
         """
-
         default_penalty = 1e5
 
         # Check coefficients of constraints.
@@ -349,13 +348,16 @@ class LinearInequalityToPenalty(OptimizationProblemConverter):
 
         lin_b = problem.objective.linear.bounds
         quad_b = problem.objective.quadratic.bounds
-        return 1.0 + (lin_b.upperbound - lin_b.lowerbound) + (quad_b.upperbound - quad_b.lowerbound)
+        return float(
+            1.0 + (lin_b.upperbound - lin_b.lowerbound) + (quad_b.upperbound - quad_b.lowerbound)
+        )
 
-    def interpret(self, x: Union[np.ndarray, List[float]]) -> np.ndarray:
-        """Convert the result of the converted problem back to that of the original problem
+    def interpret(self, x: np.ndarray | list[float]) -> np.ndarray:
+        """Convert the result of the converted problem back to that of the original problem.
 
         Args:
             x: The result of the converted problem or the given result in case of FAILURE.
+
 
         Returns:
             The result of the original problem.
@@ -364,7 +366,6 @@ class LinearInequalityToPenalty(OptimizationProblemConverter):
             OptimizationError: if the number of variables in the result differs from
                                      that of the original problem.
         """
-
         if len(x) != self._src_num_vars:
             raise OptimizationError(
                 f"The number of variables in the passed result ({len(x)}) differs from "
@@ -373,17 +374,16 @@ class LinearInequalityToPenalty(OptimizationProblemConverter):
         return np.asarray(x)
 
     @property
-    def penalty(self) -> Optional[float]:
+    def penalty(self) -> float | None:
         """Returns the penalty factor used in conversion.
 
         Returns:
             The penalty factor used in conversion.
         """
-
         return self._penalty
 
     @penalty.setter
-    def penalty(self, penalty: Optional[float]) -> None:
+    def penalty(self, penalty: float | None) -> None:
         """Set a new penalty factor.
 
         Args:
@@ -391,6 +391,5 @@ class LinearInequalityToPenalty(OptimizationProblemConverter):
                      If None is passed, a penalty factor will be automatically calculated
                      on every conversion.
         """
-
         self._penalty = penalty
         self._should_define_penalty = penalty is None

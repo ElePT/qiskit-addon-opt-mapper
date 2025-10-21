@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -10,19 +10,20 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
-Optimization converters (:mod:`qiskit_addon_opt_mapper.converters`)
-===============================================================
+"""Optimization converters.
+
+Optimization converters (:mod:`qiskit_addon_opt_mapper.converters`).
+======================================================================
 
 .. currentmodule:: qiskit_addon_opt_mapper.converters
 
 This is a set of converters having `convert` functionality to go between different representations
 of a given :class:`~qiskit_addon_opt_mapper.problems.QuadraticProgram` and to `interpret` a given
 result for the problem, based on the original problem before conversion, to return an appropriate
-:class:`~qiskit_addon_opt_mapper.algorithms.SolverResult`.
+:class:`~qiskit_addon_opt_mapper.solvers.SolverResult`.
 
 Base class for converters
--------------------------
+------------------------------
 
 .. autosummary::
    :toctree: ../stubs/
@@ -31,7 +32,7 @@ Base class for converters
    OptimizationProblemConverter
 
 Converters
-----------
+---------------
 
 .. autosummary::
    :toctree: ../stubs/
@@ -40,7 +41,6 @@ Converters
    BinaryToSpin
    InequalityToEquality
    IntegerToBinary
-   LinearEqualityToPenalty
    LinearInequalityToPenalty
    MaximizeToMinimize
    MinimizeToMaximize
@@ -63,9 +63,9 @@ from .spin_to_binary import SpinToBinary
 
 __all__ = [
     "BinaryToSpin",
+    "EqualityToPenalty",
     "InequalityToEquality",
     "IntegerToBinary",
-    "EqualityToPenalty",
     "LinearInequalityToPenalty",
     "MaximizeToMinimize",
     "MinimizeToMaximize",

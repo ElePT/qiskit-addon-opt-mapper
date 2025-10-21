@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -13,7 +13,6 @@
 """Converters to flip problem sense, e.g. maximization to minimization and vice versa."""
 
 import copy
-from typing import List, Optional, Union
 
 import numpy as np
 
@@ -24,11 +23,14 @@ from .optimization_problem_converter import OptimizationProblemConverter
 
 
 class _FlipProblemSense(OptimizationProblemConverter):
-    """Flip the sense of a problem, e.g. converts from maximization to minimization and
-    vice versa, regardless of the current sense."""
+    """Flip the sense of a problem.
+
+    e.g. converts from maximization to minimization and
+    vice versa, regardless of the current sense.
+    """
 
     def __init__(self) -> None:
-        self._src_num_vars: Optional[int] = None
+        self._src_num_vars: int | None = None
 
     def convert(self, problem: OptimizationProblem) -> OptimizationProblem:
         """Flip the sense of a problem.
@@ -36,10 +38,10 @@ class _FlipProblemSense(OptimizationProblemConverter):
         Args:
             problem: The problem to be flipped.
 
+
         Returns:
             A converted problem, that has the flipped sense.
         """
-
         # copy original number of variables as reference.
         self._src_num_vars = problem.get_num_vars()
         desired_sense = self._get_desired_sense(problem)
@@ -62,11 +64,11 @@ class _FlipProblemSense(OptimizationProblemConverter):
         return desired_problem
 
     def _get_desired_sense(self, problem: OptimizationProblem) -> ObjSense:
-        """
-        Computes a desired sense of the problem. By default, flip the sense.
+        """Computes a desired sense of the problem. By default, flip the sense.
 
         Args:
             problem: a problem to check
+
 
         Returns:
             A desired sense, if the problem was a minimization problem, then the sense is
@@ -74,10 +76,9 @@ class _FlipProblemSense(OptimizationProblemConverter):
         """
         if problem.objective.sense == ObjSense.MAXIMIZE:
             return ObjSense.MINIMIZE
-        else:
-            return ObjSense.MAXIMIZE
+        return ObjSense.MAXIMIZE
 
-    def interpret(self, x: Union[np.ndarray, List[float]]) -> np.ndarray:
+    def interpret(self, x: np.ndarray | list[float]) -> np.ndarray:
         """Convert the result of the converted problem back to that of the original problem.
 
         Note: This implementation does not modify the result, but the method is required because
@@ -86,6 +87,7 @@ class _FlipProblemSense(OptimizationProblemConverter):
 
         Args:
             x: The result of the converted problem or the given result in case of FAILURE.
+
 
         Returns:
             The result of the original problem.
@@ -103,16 +105,20 @@ class _FlipProblemSense(OptimizationProblemConverter):
 
 
 class MaximizeToMinimize(_FlipProblemSense):
-    """Convert a maximization problem to a minimization problem only if it is a maximization
-    problem, otherwise problem's sense is unchanged."""
+    """Convert a maximization problem to a minimization problem only if it is a maximization problem.
+
+    Otherwise problem's sense is unchanged.
+    """
 
     def _get_desired_sense(self, problem: OptimizationProblem) -> ObjSense:
         return ObjSense.MINIMIZE
 
 
 class MinimizeToMaximize(_FlipProblemSense):
-    """Convert a minimization problem to a maximization problem only if it is a minimization
-    problem, otherwise problem's sense is unchanged."""
+    """Convert a minimization problem to a maximization problem only if it is a minimization problem.
+
+    Otherwise problem's sense is unchanged.
+    """
 
     def _get_desired_sense(self, problem: OptimizationProblem) -> ObjSense:
         return ObjSense.MAXIMIZE

@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -27,6 +27,7 @@ class OptimizationProblemElement:
 
         Args:
             optimization_problem: The parent OptimizationProblem.
+
         Raises:
             TypeError: OptimizationProblem instance expected.
         """
@@ -53,6 +54,7 @@ class OptimizationProblemElement:
 
         Args:
             optimization_problem: The parent OptimizationProblem.
+
         Raises:
             TypeError: OptimizationProblem instance expected.
         """

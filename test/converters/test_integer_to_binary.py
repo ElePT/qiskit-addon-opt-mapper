@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -15,7 +15,6 @@
 import unittest
 
 import numpy as np
-
 from qiskit_addon_opt_mapper import OptimizationProblem
 from qiskit_addon_opt_mapper.converters import (
     IntegerToBinary,
@@ -63,10 +62,10 @@ class TestIntegerToBinaryConverter(OptimizationTestCase):
         self.assertDictEqual(mod.objective.linear.to_dict(), mod2.objective.linear.to_dict())
         self.assertDictEqual(mod.objective.quadratic.to_dict(), mod2.objective.quadratic.to_dict())
         self.assertEqual(mod.get_num_linear_constraints(), mod2.get_num_linear_constraints())
-        for cst, cst2 in zip(mod.linear_constraints, mod2.linear_constraints):
+        for cst, cst2 in zip(mod.linear_constraints, mod2.linear_constraints, strict=False):
             self.assertDictEqual(cst.linear.to_dict(), cst2.linear.to_dict())
         self.assertEqual(mod.get_num_quadratic_constraints(), mod2.get_num_quadratic_constraints())
-        for cst, cst2 in zip(mod.quadratic_constraints, mod2.quadratic_constraints):
+        for cst, cst2 in zip(mod.quadratic_constraints, mod2.quadratic_constraints, strict=False):
             self.assertDictEqual(cst.linear.to_dict(), cst2.linear.to_dict())
             self.assertDictEqual(cst.quadratic.to_dict(), cst2.quadratic.to_dict())
 
@@ -186,14 +185,14 @@ class TestIntegerToBinaryConverter(OptimizationTestCase):
             [x.name for x in op2.variables],
             ["x0@0", "x0@1", "x0@2", "x1", "x2", "x3"],
         )
-        expected_qubic = {
+        expected_cubic = {
             (0, 3, 4): 2.0,
             (1, 3, 4): 4.0,
             (2, 3, 4): 8.0,
             (3, 4, 5): 30.0,
         }
         self.assertDictEqual(
-            op2.higher_order_constraints[0].higher_order[3].to_dict(), expected_qubic
+            op2.higher_order_constraints[0].higher_order[3].to_dict(), expected_cubic
         )
         expected_quartic = {
             (0, 3, 4, 5): 3.0,

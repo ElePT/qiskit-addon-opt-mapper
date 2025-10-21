@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -12,19 +12,14 @@
 
 """The CPLEX solver wrapped to be used within the qiskit addon."""
 
-from __future__ import annotations
-
 from typing import Any
 from warnings import warn
 
+import qiskit_addon_opt_mapper.optionals as _optionals
 from qiskit_addon_opt_mapper.problems.optimization_problem import OptimizationProblem
 from qiskit_addon_opt_mapper.translators import to_docplex_mp
-import qiskit_addon_opt_mapper.optionals as _optionals
-from .solver import (
-    OptimizationSolver,
-    SolverResult,
-    SolverResultStatus,
-)
+
+from .solver import OptimizationSolver, SolverResult, SolverResultStatus
 
 
 @_optionals.HAS_CPLEX.require_in_instance
@@ -56,7 +51,7 @@ class CplexSolver(OptimizationSolver):
 
     @staticmethod
     def is_cplex_installed():
-        """Returns True if cplex is installed"""
+        """Returns True if cplex is installed."""
         return _optionals.HAS_CPLEX
 
     @property
@@ -71,6 +66,7 @@ class CplexSolver(OptimizationSolver):
     @disp.setter
     def disp(self, disp: bool):
         """Set the display setting.
+
         Args:
             disp: The display setting.
         """
@@ -78,14 +74,15 @@ class CplexSolver(OptimizationSolver):
 
     @property
     def cplex_parameters(self) -> dict[str, Any] | None:
-        """Returns parameters for CPLEX"""
+        """Returns parameters for CPLEX."""
         return self._cplex_parameters
 
     @cplex_parameters.setter
     def cplex_parameters(self, parameters: dict[str, Any] | None):
-        """Set parameters for CPLEX
+        """Set parameters for CPLEX.
+
         Args:
-            parameters: The parameters for CPLEX
+            parameters: The parameters for CPLEX.
         """
         self._cplex_parameters = parameters
 
@@ -99,6 +96,7 @@ class CplexSolver(OptimizationSolver):
 
         Args:
             problem: The optimization problem to check compatibility.
+
 
         Returns:
             An empty string.
@@ -114,18 +112,18 @@ class CplexSolver(OptimizationSolver):
         Args:
             problem: The problem to be solved.
 
+
         Returns:
             The result of the optimizer applied to the problem.
 
         Raises:
             QiskitOptimizationError: If the problem is incompatible with the optimizer.
         """
-
         mod = to_docplex_mp(problem)
         sol = mod.solve(log_output=self._disp, cplex_parameters=self._cplex_parameters)
         if sol is None:
             # no solution is found
-            warn("CPLEX cannot solve the model")
+            warn("CPLEX cannot solve the model", stacklevel=2)
             x = [0.0] * mod.number_of_variables
             return SolverResult(
                 x=x,
@@ -134,13 +132,12 @@ class CplexSolver(OptimizationSolver):
                 status=SolverResultStatus.FAILURE,
                 raw_results=None,
             )
-        else:
-            # a solution is found
-            x = sol.get_values(mod.iter_variables())
-            return SolverResult(
-                x=x,
-                fval=sol.get_objective_value(),
-                variables=problem.variables,
-                status=self._get_feasibility_status(problem, x),
-                raw_results=sol,
-            )
+        # a solution is found
+        x = sol.get_values(mod.iter_variables())
+        return SolverResult(
+            x=x,
+            fval=sol.get_objective_value(),
+            variables=problem.variables,
+            status=self._get_feasibility_status(problem, x),
+            raw_results=sol,
+        )

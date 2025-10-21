@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -13,10 +13,12 @@
 """Test from_docplex_mp and to_docplex_mp"""
 
 from docplex.mp.model import Model
-
 from qiskit_addon_opt_mapper.exceptions import OptimizationError
 from qiskit_addon_opt_mapper.problems import Constraint, OptimizationProblem
-from qiskit_addon_opt_mapper.translators.docplex_mp import from_docplex_mp, to_docplex_mp
+from qiskit_addon_opt_mapper.translators.docplex_mp import (
+    from_docplex_mp,
+    to_docplex_mp,
+)
 
 from ..optimization_test_case import OptimizationTestCase
 
@@ -39,7 +41,8 @@ class TestDocplexMpTranslator(OptimizationTestCase):
         q_p.quadratic_constraint({"x": 2, "z": -1}, {("y", "z"): 3}, "==", 1)
         q_p2 = from_docplex_mp(to_docplex_mp(q_p))
         self.assertEqual(
-            to_docplex_mp(q_p).export_as_lp_string(), to_docplex_mp(q_p2).export_as_lp_string()
+            to_docplex_mp(q_p).export_as_lp_string(),
+            to_docplex_mp(q_p2).export_as_lp_string(),
         )
 
         mod = Model("test")
@@ -91,7 +94,10 @@ class TestDocplexMpTranslator(OptimizationTestCase):
             mod.add_range(0, 2 * x, 1)
             _ = from_docplex_mp(mod)
 
-        with self.subTest("equivalence constraint"), self.assertRaises(OptimizationError):
+        with (
+            self.subTest("equivalence constraint"),
+            self.assertRaises(OptimizationError),
+        ):
             mod = Model()
             x = mod.binary_var("x")
             y = mod.binary_var("y")
@@ -714,7 +720,10 @@ class TestDocplexMpTranslator(OptimizationTestCase):
             self.assertDictEqual(lin.linear.to_dict(), {})
             self.assertAlmostEqual(lin.rhs, 0)
 
-        with self.subTest("trivial quadratic constraint"), self.assertWarns(UserWarning):
+        with (
+            self.subTest("trivial quadratic constraint"),
+            self.assertWarns(UserWarning),
+        ):
             mod = Model()
             x = mod.binary_var("x")
             mod.add_constraint(x * x == x * x)
@@ -729,7 +738,10 @@ class TestDocplexMpTranslator(OptimizationTestCase):
             self.assertDictEqual(quad.quadratic.to_dict(), {})
             self.assertAlmostEqual(quad.rhs, 0)
 
-        with self.subTest("trivial indicator constraint"), self.assertWarns(UserWarning):
+        with (
+            self.subTest("trivial indicator constraint"),
+            self.assertWarns(UserWarning),
+        ):
             mod = Model()
             x = mod.binary_var("x")
             mod.add_indicator(x, x + 1 >= x + 1)

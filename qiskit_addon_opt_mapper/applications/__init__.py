@@ -1,4 +1,4 @@
-# This code is part of a Qiskit project.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2025.
 #
@@ -9,6 +9,13 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
+
+"""Applications module for Optimization Add-on.
+
+===================================================================
+Applications module (:mod:`qiskit_addon_opt_mapper.applications`)
+===================================================================
+"""
 
 from .bin_packing import BinPacking
 from .clique import Clique
@@ -32,13 +39,13 @@ __all__ = [
     "ExactCover",
     "GraphOptimizationApplication",
     "GraphPartition",
+    "IndependentSet",
     "Knapsack",
     "Maxcut",
     "NumberPartition",
     "OptimizationApplication",
-    "SetPacking",
     "SKModel",
-    "IndependentSet",
+    "SetPacking",
     "Tsp",
     "VehicleRouting",
     "VertexCover",
