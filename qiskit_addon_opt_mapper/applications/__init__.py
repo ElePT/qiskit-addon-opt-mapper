@@ -10,9 +10,10 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
-Optimization applications (:mod:`qiskit_addon_opt_mapper.applications`)
-===================================================================
+"""Optimization applications.
+
+Optimization applications (:mod:`qiskit_addon_opt_mapper.applications`).
+========================================================================
 
 .. currentmodule:: qiskit_addon_opt_mapper.applications
 
