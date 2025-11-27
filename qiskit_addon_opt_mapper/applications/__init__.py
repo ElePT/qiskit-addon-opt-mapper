@@ -44,7 +44,6 @@ Applications
    NumberPartition
    SetPacking
    SKModel
-   StableSet
    Tsp
    VehicleRouting
    VertexCover
