@@ -49,7 +49,6 @@ Applications
    VertexCover
 """
 
-
 from .bin_packing import BinPacking
 from .clique import Clique
 from .exact_cover import ExactCover
