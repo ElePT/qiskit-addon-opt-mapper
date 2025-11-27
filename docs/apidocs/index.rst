@@ -1,5 +1,5 @@
 **********************************
-``qiskit-addon-mpf`` API reference
+``qiskit-addon-opt-mapper`` API reference
 **********************************
 
 .. toctree::
